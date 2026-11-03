@@ -1,0 +1,92 @@
+# Servidor de cuentas de Brilliant
+
+Un programa aparte de la app: guarda las cuentas de los jugadores y les da sesiones.
+La app se registra aquí, inicia sesión y puede borrar su cuenta.
+
+Está hecho con paquetes que ya implementan la autenticación, sin sockets a mano:
+
+| Paquete | Para qué |
+|---|---|
+| Django | Las cuentas (usuario y contraseña), los validadores de contraseña y la base SQLite |
+| Django REST framework | La API |
+| djoser | Crear la cuenta, verla y borrarla |
+| django-rest-knox | Los tokens de sesión |
+| argon2-cffi | El hash de las contraseñas (Argon2id) |
+| django-cors-headers | Que la versión web de la app pueda llamar a la API |
+| uvicorn | Servir la API con HTTPS |
+| cryptography | Generar los certificados locales |
+
+## Levantarlo
+
+```bat
+servidor\iniciar.bat
+```
+
+La primera vez crea el entorno de Python (`servidor\.venv`) e instala los paquetes. Cada vez
+aplica las migraciones, vuelve a generar el certificado del servidor y lo levanta en
+**https://localhost:8443**. Se detiene con Ctrl+C.
+
+- **Desde el emulador de Android**, la app lo encuentra en `https://10.0.2.2:8443`.
+- **Desde el celular**, en la misma WiFi que la PC, en `https://<IP de la PC>:8443`. La
+  primera vez Windows pregunta si deja entrar conexiones: hay que permitirlo en redes
+  privadas.
+
+## La API
+
+Todo bajo `/auth/`, en JSON:
+
+| Método y ruta | Qué hace | Cuerpo |
+|---|---|---|
+| `POST /auth/users/` | Crear la cuenta | `username`, `password`, `re_password` |
+| `POST /auth/token/login/` | Iniciar sesión: devuelve `token` y `expiry` | `username`, `password` |
+| `GET /auth/users/me/` | Quién soy | — |
+| `POST /auth/token/logout/` | Cerrar esta sesión | — |
+| `DELETE /auth/users/me/` | Borrar la cuenta | `current_password` |
+
+Las rutas con sesión llevan el header `Authorization: Token <token>`. Los errores vienen en
+español, por campo: `{"password": ["Esta contraseña es demasiado corta..."]}`.
+
+## Qué la hace segura
+
+- **Contraseñas con Argon2id**, nunca en texto. Tienen que tener al menos 8 caracteres, no
+  ser comunes, no ser solo números y no parecerse al usuario.
+- **Tokens que se guardan con hash** (knox): si se filtrara la base, no servirían. Vencen a
+  los 7 días y se renuevan al usarse. Cerrar sesión invalida el token, y borrar la cuenta
+  borra todos.
+- **Borrar la cuenta pide la contraseña actual**, aunque haya sesión abierta.
+- **Nadie ve ni toca la cuenta de otro**: solo existen las rutas `me`.
+- **Límite de intentos por IP**: 5 inicios de sesión por minuto y 10 cuentas nuevas por
+  hora.
+- **Siempre HTTPS**, con una autoridad certificadora local (ver abajo). La app solo confía
+  en esa autoridad.
+- La `SECRET_KEY` se genera la primera vez en `servidor\.env`, que no se sube al repo.
+  `DEBUG` está apagado.
+
+## Los certificados
+
+`generar_certificados.py` crea en `servidor\certificados\`:
+
+- una **autoridad local** (`ca.pem` y `ca.key`), una sola vez, que dura 10 años;
+- el **certificado del servidor** (`servidor.pem` y `servidor.key`), para `localhost`,
+  `127.0.0.1`, `10.0.2.2` y las IPs de la PC. Se regenera cada vez que se levanta el
+  servidor, así que sigue sirviendo aunque cambie la IP.
+
+Copia el certificado **público** de la autoridad a la app
+(`assets\certificados\brilliant_ca.pem`). Las claves privadas nunca salen de esta PC ni se
+suben al repo.
+
+**Para usar la versión web en tu navegador**, el navegador tiene que confiar en la
+autoridad local. Se importa `servidor\certificados\ca.pem` en "Entidades de certificación
+raíz de confianza" del usuario de Windows (abrir el archivo → Instalar certificado). Es
+opcional: la app de Android no lo necesita.
+
+## Tests
+
+```bat
+cd servidor
+.venv\Scripts\python.exe -m pytest
+```
+
+29 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
+sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas y cómo se
+guardan las contraseñas y los tokens.
