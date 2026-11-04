@@ -12,13 +12,14 @@ def test_cerrar_sesion_invalida_ese_token(cliente, cuenta_con_sesion):
     assert cliente.get('/auth/users/me/').status_code == 401
 
 
-def test_cerrar_sesion_no_cierra_las_otras_sesiones(cliente, cuenta_con_sesion):
-    # La misma cuenta, abierta en otro aparato.
-    otro_token = entrar(cliente).data['token']
-
+def test_cerrar_sesion_deja_entrar_desde_otro_aparato(cliente, cuenta_con_sesion):
     con_token(cliente, cuenta_con_sesion).post('/auth/token/logout/')
+    cliente.credentials()
 
-    assert con_token(cliente, otro_token).get('/auth/users/me/').status_code == 200
+    respuesta = entrar(cliente)
+
+    assert respuesta.status_code == 200
+    assert con_token(cliente, respuesta.data['token']).get('/auth/users/me/').status_code == 200
 
 
 def test_sin_token_no_hay_nada_que_cerrar(cliente):

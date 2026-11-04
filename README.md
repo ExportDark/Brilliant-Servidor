@@ -73,10 +73,25 @@ Todo bajo `/auth/`, en JSON:
 Las rutas con sesión llevan el header `Authorization: Token <token>`. Los errores vienen en
 español, por campo: `{"password": ["Esta contraseña es demasiado corta..."]}`.
 
+Iniciar sesión responde **409** si la cuenta tiene la sesión activa en otro aparato (ver
+abajo).
+
+## Las reglas de las cuentas
+
+| Qué | Regla |
+|---|---|
+| Nombre de usuario | De 3 a 20 caracteres: letras sin acento, números, `.`, `_` y `-`. Se recortan los espacios del borde |
+| Mayúsculas | "Ana" y "ana" son la misma cuenta: no se puede crear la otra, y se entra escribiéndola de cualquier forma. El nombre se guarda como se escribió |
+| Contraseña | De 8 a 128 caracteres, no común, no solo números y no parecida al usuario. Se recibe tal cual: los espacios del borde son parte de ella, y se aceptan ñ, acentos y emojis |
+| Sesiones | Una sola activa por cuenta. Si se usó en otro aparato en los últimos 5 minutos, no deja entrar; si no, la entrada nueva cierra la vieja |
+
 ## Qué la hace segura
 
 - **Contraseñas con Argon2id**, nunca en texto. Tienen que tener al menos 8 caracteres, no
-  ser comunes, no ser solo números y no parecerse al usuario.
+  ser comunes, no ser solo números y no parecerse al usuario. Como mucho 128: una
+  gigante haría trabajar al servidor calculando su hash.
+- **Nombres de usuario sin letras de otros alfabetos**: "аna", con una "а" cirílica, no
+  puede hacerse pasar por "ana".
 - **Tokens que se guardan con hash** (knox): si se filtrara la base, no servirían. Vencen a
   los 7 días y se renuevan al usarse. Cerrar sesión invalida el token, y borrar la cuenta
   borra todos.
@@ -115,6 +130,6 @@ cd servidor
 .venv\Scripts\python.exe -m pytest
 ```
 
-34 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
+76 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
 sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas, cómo se
 guardan las contraseñas y los tokens, las IPs de la PC y el anuncio en la red.

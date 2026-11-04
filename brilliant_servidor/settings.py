@@ -113,8 +113,17 @@ REST_KNOX = {
     # La sesión dura 7 días y se renueva cada vez que se usa.
     'TOKEN_TTL': timedelta(days=7),
     'AUTO_REFRESH': True,
-    'TOKEN_LIMIT_PER_USER': 10,
+    # Una sola sesión por cuenta (ver cuentas.views.Entrar).
+    'TOKEN_LIMIT_PER_USER': 1,
 }
+
+# Una sesión usada hace menos que esto cuenta como activa, y no deja entrar
+# con la misma cuenta en otro aparato. La app avisa cada 2 minutos que sigue
+# abierta.
+SESION_ACTIVA = timedelta(minutes=5)
+
+# Se inicia sesión sin distinguir mayúsculas: "ANA" entra a la cuenta "ana".
+AUTHENTICATION_BACKENDS = ['cuentas.autenticacion.SinDistinguirMayusculas']
 
 DJOSER = {
     # Al crear la cuenta, la contraseña se escribe dos veces.
@@ -123,6 +132,12 @@ DJOSER = {
     'TOKEN_MODEL': None,
     # Nadie puede ver ni tocar la cuenta de otro.
     'HIDE_USERS': True,
+    # Las reglas del nombre de usuario y la contraseña tal cual (sin recortar
+    # sus espacios): ver cuentas/serializers.py.
+    'SERIALIZERS': {
+        'user_create_password_retype': 'cuentas.serializers.CrearCuenta',
+        'user_delete': 'cuentas.serializers.BorrarCuenta',
+    },
 }
 
 # La versión web de la app se sirve desde localhost: es el único origen que

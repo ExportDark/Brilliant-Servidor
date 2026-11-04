@@ -36,7 +36,8 @@ def test_sin_sesion_no_se_puede_borrar(cliente, cuenta_con_sesion):
 
 
 def test_con_la_contrasena_la_borra_con_sus_sesiones(cliente, cuenta_con_sesion):
-    otro_token = entrar(cliente).data['token']
+    # Una sesión vieja en otro aparato, que ya no se usa (un celular perdido).
+    _, otro_token = AuthToken.objects.create(get_user_model().objects.get(username='ana'))
 
     respuesta = _borrar(cliente, cuenta_con_sesion, current_password=CONTRASENA)
 
