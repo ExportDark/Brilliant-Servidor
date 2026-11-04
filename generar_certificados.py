@@ -4,9 +4,13 @@
   Su certificado público se copia a la app (`assets/certificados/brilliant_ca.pem`),
   que solo confía en ella para hablar con el servidor.
 - El **certificado del servidor**, firmado por esa autoridad, para `localhost`,
-  `127.0.0.1`, `10.0.2.2` (el emulador de Android) y las IPs de esta PC. Se
-  vuelve a generar cada vez: si cambia la IP, basta con volver a correr el
-  script, y como la autoridad es la misma, la app no hay que recompilarla.
+  `127.0.0.1`, `10.0.2.2` (el emulador de Android) y las IPs de todas las
+  interfaces encendidas de esta PC. Se vuelve a generar cada vez: si cambia la
+  IP, basta con volver a correr el script, y como la autoridad es la misma, la
+  app no hay que recompilarla.
+
+Al final muestra la dirección de la PC, por si la app no encuentra el servidor sola
+y hay que escribirla en "Iniciar sesión" > Servidor.
 
 Las claves privadas se quedan en `servidor/certificados/` y no se suben al repo.
 
@@ -15,7 +19,6 @@ Uso: python generar_certificados.py [IP extra ...]
 
 import ipaddress
 import shutil
-import socket
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -25,6 +28,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
+from red_local import ips_de_esta_pc, ips_para_la_app
+
 AQUI = Path(__file__).resolve().parent
 CARPETA = AQUI / 'certificados'
 CA_CERTIFICADO = CARPETA / 'ca.pem'
@@ -32,13 +37,6 @@ CA_CLAVE = CARPETA / 'ca.key'
 SERVIDOR_CERTIFICADO = CARPETA / 'servidor.pem'
 SERVIDOR_CLAVE = CARPETA / 'servidor.key'
 EN_LA_APP = AQUI.parent / 'assets' / 'certificados' / 'brilliant_ca.pem'
-
-
-def _ips_de_esta_pc() -> list[str]:
-    try:
-        return socket.gethostbyname_ex(socket.gethostname())[2]
-    except OSError:
-        return []
 
 
 def _guardar_clave(clave, archivo: Path) -> None:
@@ -117,7 +115,7 @@ def main(ips_extra: list[str]) -> None:
     CARPETA.mkdir(exist_ok=True)
     ca, ca_clave = _autoridad()
 
-    ips = list(dict.fromkeys(['127.0.0.1', '10.0.2.2', *_ips_de_esta_pc(), *ips_extra]))
+    ips = list(dict.fromkeys(['127.0.0.1', '10.0.2.2', *ips_de_esta_pc(), *ips_extra]))
     _certificado_del_servidor(ca, ca_clave, ips)
 
     EN_LA_APP.parent.mkdir(parents=True, exist_ok=True)
@@ -125,6 +123,15 @@ def main(ips_extra: list[str]) -> None:
 
     print(f'Certificado del servidor para localhost y {", ".join(ips)}.')
     print(f'La app confía en la autoridad copiada a {EN_LA_APP.relative_to(AQUI.parent)}.')
+    para_la_app = ips_para_la_app()
+    if para_la_app:
+        print()
+        print('La app encuentra el servidor sola en la WiFi. Si no lo encuentra, en')
+        print('"Iniciar sesión" > Servidor, escribe:')
+        for ip in para_la_app:
+            print(f'    {ip}')
+    else:
+        print('Esta PC no está conectada a ninguna red: el celular no la va a encontrar.')
 
 
 if __name__ == '__main__':

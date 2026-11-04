@@ -7,9 +7,10 @@ django-rest-knox los tokens de sesión, que se guardan con hash y vencen.
 
 import os
 import secrets
-import socket
 from datetime import timedelta
 from pathlib import Path
+
+from red_local import ips_de_esta_pc
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,21 +34,14 @@ def _clave_secreta() -> str:
     return clave
 
 
-def _ips_de_esta_pc() -> list[str]:
-    """Las IPv4 de la PC en la red local, para que el celular pueda entrar."""
-    try:
-        return socket.gethostbyname_ex(socket.gethostname())[2]
-    except OSError:
-        return []
-
-
 SECRET_KEY = _clave_secreta()
 
 DEBUG = os.environ.get('BRILLIANT_DEBUG') == '1'
 
 # localhost para la PC y la versión web, 10.0.2.2 para el emulador de Android
-# y las IPs de la red local para el celular.
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', *_ips_de_esta_pc()]
+# y las IPs de la red local para el celular. Se leen al arrancar: si la PC
+# cambia de red, hay que volver a levantar el servidor.
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '10.0.2.2', *ips_de_esta_pc()]
 
 INSTALLED_APPS = [
     'django.contrib.auth',

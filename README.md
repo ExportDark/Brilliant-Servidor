@@ -15,6 +15,8 @@ Está hecho con paquetes que ya implementan la autenticación, sin sockets a man
 | django-cors-headers | Que la versión web de la app pueda llamar a la API |
 | uvicorn | Servir la API con HTTPS |
 | cryptography | Generar los certificados locales |
+| psutil | Saber las IPs de la PC, de todas sus interfaces de red |
+| zeroconf | Anunciar el servidor en la red (mDNS), para que la app lo encuentre sola |
 
 ## Levantarlo
 
@@ -23,13 +25,38 @@ servidor\iniciar.bat
 ```
 
 La primera vez crea el entorno de Python (`servidor\.venv`) e instala los paquetes. Cada vez
-aplica las migraciones, vuelve a generar el certificado del servidor y lo levanta en
-**https://localhost:8443**. Se detiene con Ctrl+C.
+aplica las migraciones, vuelve a generar el certificado del servidor, muestra la IP de la PC
+y lo levanta en **https://localhost:8443**. Se detiene con Ctrl+C.
 
 - **Desde el emulador de Android**, la app lo encuentra en `https://10.0.2.2:8443`.
-- **Desde el celular**, en la misma WiFi que la PC, en `https://<IP de la PC>:8443`. La
-  primera vez Windows pregunta si deja entrar conexiones: hay que permitirlo en redes
-  privadas.
+- **Desde el celular**, en la misma WiFi que la PC, **la app lo encuentra sola**: el
+  servidor se anuncia en la red como "Brilliant en <nombre de la PC>". Si no aparece, en
+  "Iniciar sesión" > Servidor se escribe la IP que muestra `iniciar.bat`. La primera vez
+  Windows pregunta si deja entrar conexiones: hay que permitirlo en redes privadas.
+
+### Si la PC cambia de red
+
+`servir.py` revisa cada 5 segundos las IPs de la PC. Si cambian (otra WiFi, por ejemplo),
+se detiene, e `iniciar.bat` lo vuelve a levantar con un certificado y un anuncio para la
+red nueva. La app, al no encontrarlo en la dirección vieja, lo busca en la red y se cambia
+sola.
+
+### El anuncio en la red
+
+Es mDNS / DNS-SD, lo mismo con lo que se descubren las impresoras: un servicio
+`_brilliant._tcp` con las IPs de la PC y el puerto 8443. Se anuncian las IPs de las
+interfaces encendidas, sin las de máquinas virtuales (VMware, VirtualBox, Hyper-V, WSL),
+porque el celular no llega a esas.
+
+Anunciarse no le da confianza a nadie: la app igual exige que el certificado sea de la
+autoridad de Brilliant. Un servidor ajeno que se anunciara con el mismo nombre no pasaría
+de ahí.
+
+> [!note] zeroconf sin partes compiladas
+> zeroconf trae DLL compiladas sin firmar, y el Control de Aplicaciones de Windows las
+> bloquea ("An Application Control policy has blocked this file"). Por eso se instala en
+> Python puro: `requirements.txt` dice `--no-binary zeroconf` e `iniciar.bat` pone
+> `SKIP_CYTHON=1`. Es un poco más lento, pero solo anuncia un servicio.
 
 ## La API
 
@@ -68,8 +95,9 @@ español, por campo: `{"password": ["Esta contraseña es demasiado corta..."]}`.
 
 - una **autoridad local** (`ca.pem` y `ca.key`), una sola vez, que dura 10 años;
 - el **certificado del servidor** (`servidor.pem` y `servidor.key`), para `localhost`,
-  `127.0.0.1`, `10.0.2.2` y las IPs de la PC. Se regenera cada vez que se levanta el
-  servidor, así que sigue sirviendo aunque cambie la IP.
+  `127.0.0.1`, `10.0.2.2` y las IPs de todas las interfaces encendidas de la PC (las
+  detecta `red_local.py`). Se regenera cada vez que se levanta el servidor, así que sigue
+  sirviendo aunque cambie la IP.
 
 Copia el certificado **público** de la autoridad a la app
 (`assets\certificados\brilliant_ca.pem`). Las claves privadas nunca salen de esta PC ni se
@@ -87,6 +115,6 @@ cd servidor
 .venv\Scripts\python.exe -m pytest
 ```
 
-29 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
-sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas y cómo se
-guardan las contraseñas y los tokens.
+34 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
+sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas, cómo se
+guardan las contraseñas y los tokens, las IPs de la PC y el anuncio en la red.
