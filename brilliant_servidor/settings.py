@@ -109,18 +109,19 @@ REST_FRAMEWORK = {
     },
 }
 
+# Una sesión que pasa este rato sin usarse vence sola. La app, mientras está
+# abierta, avisa cada 2 minutos que la sigue usando, y eso la renueva. Así, si el
+# cierre de sesión no llega al servidor, la cuenta no queda bloqueada.
+SESION_SIN_USO = timedelta(minutes=5)
+
 REST_KNOX = {
-    # La sesión dura 7 días y se renueva cada vez que se usa.
-    'TOKEN_TTL': timedelta(days=7),
+    # La sesión vence a los SESION_SIN_USO sin usarse, y se renueva cada vez que
+    # se usa.
+    'TOKEN_TTL': SESION_SIN_USO,
     'AUTO_REFRESH': True,
     # Una sola sesión por cuenta (ver cuentas.views.Entrar).
     'TOKEN_LIMIT_PER_USER': 1,
 }
-
-# Una sesión usada hace menos que esto cuenta como activa, y no deja entrar
-# con la misma cuenta en otro aparato. La app avisa cada 2 minutos que sigue
-# abierta.
-SESION_ACTIVA = timedelta(minutes=5)
 
 # Se inicia sesión sin distinguir mayúsculas: "ANA" entra a la cuenta "ana".
 AUTHENTICATION_BACKENDS = ['cuentas.autenticacion.SinDistinguirMayusculas']

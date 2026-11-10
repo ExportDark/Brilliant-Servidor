@@ -34,6 +34,17 @@ y lo levanta en **https://localhost:8443**. Se detiene con Ctrl+C.
   "Iniciar sesión" > Servidor se escribe la IP que muestra `iniciar.bat`. La primera vez
   Windows pregunta si deja entrar conexiones: hay que permitirlo en redes privadas.
 
+### Al arrancar, se cierran todas las sesiones
+
+Las sesiones están en la base de datos y sobreviven a un reinicio. `iniciar.bat` corre
+`manage.py cerrar_sesiones` cada vez que se arranca a mano, así una sesión que quedó
+abierta (porque el cierre de sesión no llegó) no bloquea la cuenta. No lo corre cuando
+`servir.py` se levanta solo por un cambio de red. Cada celular lo nota en su próximo aviso
+(2 minutos como mucho) y vuelve a "Iniciar sesión".
+
+Si ya hay un servidor en el puerto 8443, `servir.py` lo dice claro y termina con el código 2;
+`iniciar.bat` muestra el error y, si se abrió con doble clic, espera una tecla.
+
 ### Si la PC cambia de red
 
 `servir.py` revisa cada 5 segundos las IPs de la PC. Si cambian (otra WiFi, por ejemplo),
@@ -83,7 +94,7 @@ abajo).
 | Nombre de usuario | De 3 a 20 caracteres: letras sin acento, números, `.`, `_` y `-`. Se recortan los espacios del borde |
 | Mayúsculas | "Ana" y "ana" son la misma cuenta: no se puede crear la otra, y se entra escribiéndola de cualquier forma. El nombre se guarda como se escribió |
 | Contraseña | De 8 a 128 caracteres, no común, no solo números y no parecida al usuario. Se recibe tal cual: los espacios del borde son parte de ella, y se aceptan ñ, acentos y emojis |
-| Sesiones | Una sola activa por cuenta. Si se usó en otro aparato en los últimos 5 minutos, no deja entrar; si no, la entrada nueva cierra la vieja |
+| Sesiones | Una sola por cuenta, y **vence a los 5 minutos sin usarse** (la app avisa cada 2 minutos mientras está abierta). Si hay una sin vencer en otro aparato, entrar da 409 y dice cuántos minutos faltan; si no, la entrada nueva borra las vencidas |
 
 ## Qué la hace segura
 
@@ -130,6 +141,6 @@ cd servidor
 .venv\Scripts\python.exe -m pytest
 ```
 
-76 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
+86 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
 sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas, cómo se
 guardan las contraseñas y los tokens, las IPs de la PC y el anuncio en la red.

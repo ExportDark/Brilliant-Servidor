@@ -32,6 +32,18 @@ INTERVALO = 5
 # vuelva a levantar.
 RED_CAMBIADA = 3
 
+# El código con el que termina si el puerto ya está en uso (otro servidor).
+PUERTO_OCUPADO = 2
+
+
+def puerto_ocupado(puerto: int) -> bool:
+    """Si algo ya escucha en [puerto] de esta PC. Se prueba conectándose, no
+    abriéndolo: así también lo ve ocupado un servidor que escucha en todas las
+    interfaces."""
+    with socket.socket() as prueba:
+        prueba.settimeout(0.5)
+        return prueba.connect_ex(('127.0.0.1', puerto)) == 0
+
 
 def informacion_del_servicio(ips: list[str], nombre_de_la_pc: str) -> ServiceInfo:
     """El anuncio del servidor: "Brilliant en <PC>", con sus IPs y su puerto."""
@@ -57,6 +69,11 @@ def _vigilar_la_red(ips_al_empezar: list[str], servidor: uvicorn.Server, cambio:
 
 
 def main() -> int:
+    if puerto_ocupado(PUERTO):
+        print(f'Ya hay un servidor escuchando en el puerto {PUERTO}: cierra el otro antes de '
+              'levantar este (probablemente ya tienes iniciar.bat abierto en otra ventana).')
+        return PUERTO_OCUPADO
+
     ips = ips_para_la_app()
     servidor = uvicorn.Server(uvicorn.Config(
         'brilliant_servidor.asgi:application',
@@ -71,7 +88,8 @@ def main() -> int:
     if ips:
         zeroconf = Zeroconf(ip_version=IPVersion.V4Only)
         anuncio = informacion_del_servicio(ips, socket.gethostname())
-        zeroconf.register_service(anuncio)
+        # Si otra PC se llama igual, zeroconf le cambia el nombre en vez de fallar.
+        zeroconf.register_service(anuncio, allow_name_change=True)
         print(f'Anunciado en la red como "{anuncio.name.removesuffix("." + TIPO)}": '
               f'la app lo encuentra sola.')
     else:

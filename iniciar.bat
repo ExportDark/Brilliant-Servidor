@@ -11,6 +11,8 @@ rem zeroconf, sin sus partes compiladas (ver requirements.txt).
 set SKIP_CYTHON=1
 .venv\Scripts\python.exe -m pip install --quiet -r requirements.txt || goto :error
 .venv\Scripts\python.exe manage.py migrate --noinput || goto :error
+rem Las sesiones sobreviven a un reinicio (estan en la base): se cierran todas.
+.venv\Scripts\python.exe manage.py cerrar_sesiones || goto :error
 
 :levantar
 .venv\Scripts\python.exe generar_certificados.py || goto :error
@@ -20,8 +22,11 @@ echo Servidor de cuentas en https://localhost:8443  (Ctrl+C para detenerlo)
 rem servir.py termina con 3 si la PC cambio de red: se vuelve a levantar con un
 rem certificado y un anuncio para la red nueva.
 if errorlevel 3 goto :levantar
+if errorlevel 1 goto :error
 goto :eof
 
 :error
 echo No se pudo levantar el servidor.
+rem Con doble clic la ventana se cerraria antes de leer el error.
+echo %cmdcmdline% | find /i "%~0" >nul && pause
 exit /b 1
