@@ -97,6 +97,58 @@ abajo).
 | Contraseña | De 8 a 128 caracteres, no común, no solo números y no parecida al usuario. Se recibe tal cual: los espacios del borde son parte de ella, y se aceptan ñ, acentos y emojis |
 | Sesiones | Una sola por cuenta, y **vence a los 5 minutos sin usarse** (la app avisa cada 2 minutos mientras está abierta). Si hay una sin vencer en otro aparato, entrar da 409 y dice cuántos minutos faltan; si no, la entrada nueva borra las vencidas |
 
+## El multijugador (`/salas/`)
+
+El servidor es el que manda en una partida en línea: tira los dados, valida cada jugada con
+las reglas del juego y calcula los puntos. Todo vive en memoria: si el servidor se reinicia,
+las salas y las partidas en curso terminan. Todas las rutas piden sesión.
+
+| Método y ruta | Qué hace |
+|---|---|
+| `POST /salas/` | Crea una sala; quien la crea es el anfitrión. Responde 201 con el código (6 caracteres, sin 0/O/1/I/L) |
+| `POST /salas/{código}/unirse/` | Entra a la sala. Hasta 6 jugadores |
+| `POST /salas/{código}/mapa/` | `{"nivel": 1..4}`: el anfitrión elige el mapa |
+| `POST /salas/{código}/empezar/` | El anfitrión, con 2 o más jugadores |
+| `POST /salas/{código}/preparacion/` | `{"valores": {"E1": 1, ...}}`: los números del 1 al 6 en las 6 casillas iniciales |
+| `POST /salas/{código}/jugada/` | `{"ronda", "dado_ancla", "casilla"}` o `{"ronda", "pasar": true}` |
+| `POST /salas/{código}/rendirse/` | Se sale (en el lobby, solo sale; en la partida, queda fuera) |
+| `GET /salas/{código}/?version=N` | El estado para quien pregunta; 304 si no cambió. **Preguntar cuenta como estar conectado** |
+
+Cada pedido que cambia algo responde con el mismo estado que el `GET`. Los errores salen como
+`{"codigo": "...", "detail": "..."}` (a veces con `motivo`) y el código HTTP que toca:
+404 la sala no existe, 403 no estás en ella o no eres el anfitrión, 409 el estado no lo
+permite (llena, ya empezó, ya jugaste, ronda equivocada), 400 el pedido es inválido.
+
+**Cómo se juega:** en el lobby se elige el mapa y se invita con el código; con 2 o más
+jugadores el anfitrión empieza. Cada uno reparte los números del 1 al 6 en sus 6 casillas
+iniciales (60 s; si no, se reparten al azar). Luego, en cada ronda salen dos dados iguales
+para todos, y cada uno anota el otro dado junto al ancla (60 s; quien no juega, pasa).
+
+**Desconexión:** quien pasa más de 10 segundos sin preguntar queda fuera, igual que quien se
+rinde. Con 2 jugadores, si uno sale gana el otro. **Si se va el anfitrión, ganan los demás.**
+Con 3 o más, si se va otro la partida sigue, y si queda uno solo, gana. Quien queda fuera
+conserva los puntos que ya había ganado, pero no puede ganar.
+
+**Puntos:** cada zona completa da puntos según el puesto en que se llena (1.º, 2.º, 3.º; del
+4.º en adelante, 0), el mapa y el color (`juego/puntuacion.py`). Cada zona paga por
+separado, y si varias personas la llenan en la misma ronda, todas toman el mismo puesto.
+Gana quien más puntos suma; si empatan, quien tenga más 1.º; si siguen empatados, ganan los
+empatados. La partida termina cuando todos llenaron su tablero o nadie puede jugar.
+
+**Privacidad:** nadie ve los números ni las casillas de los demás. Cada jugador recibe su
+propio tablero y sus jugadas legales; de los demás, solo nombre, estado, si ya jugó, puntos
+y qué zonas llenó. El panel de zonas (público) dice qué puestos se tomaron y cuántos puntos
+da el siguiente, o "agotada".
+
+### Las reglas del juego, en Python
+
+`juego/` tiene las reglas de color, el tablero con los 4 mapas y la validación de jugadas,
+portadas de la app (`lib/reglas`, `lib/modelo`, `lib/juego`). Para que nunca se separen, los
+mapas y 320 tableros de partidas simuladas con la respuesta de las reglas en Dart los genera
+la app (`tool/exportar_para_el_servidor.dart`) y se copian a mano a `juego/datos/`;
+`juego/tests/test_paridad.py` exige que Python dé lo mismo en cada caso. Si cambias una regla
+en la app, hay que volver a exportar y copiar esos dos archivos.
+
 ## Qué la hace segura
 
 - **Contraseñas con Argon2id**, nunca en texto. Tienen que tener al menos 8 caracteres, no
@@ -138,10 +190,16 @@ opcional: la app de Android no lo necesita.
 ## Tests
 
 ```bat
-cd servidor
 .venv\Scripts\python.exe -m pytest
 ```
 
-86 tests, uno por archivo de `cuentas\tests\` según qué prueban: crear la cuenta, iniciar
-sesión, quién soy, cerrar sesión, borrar la cuenta, la privacidad entre cuentas, cómo se
-guardan las contraseñas y los tokens, las IPs de la PC y el anuncio en la red.
+1026 tests (más 1 que se salta a propósito):
+
+- `cuentas\tests\` (86): crear la cuenta, iniciar sesión, quién soy, cerrar sesión, borrar
+  la cuenta, la privacidad entre cuentas, las contraseñas y los tokens, las IPs de la PC y
+  el anuncio en la red.
+- `juego\tests\` (704): las reglas de color, el tablero y los mapas, la validación de
+  jugadas, los puntos, y la paridad con las reglas de la app (320 tableros).
+- `salas\tests\` (236): el lobby, la preparación, las rondas, las desconexiones, los puntos
+  y los puestos, la privacidad, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
+  en los 4 mapas, con jugadores que se rinden a la mitad.

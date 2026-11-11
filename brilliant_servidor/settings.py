@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'cuentas',
+    'salas',
 ]
 
 MIDDLEWARE = [
