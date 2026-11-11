@@ -124,8 +124,8 @@ jugadores el anfitrión empieza. Cada uno reparte los números del 1 al 6 en sus
 iniciales (60 s; si no, se reparten al azar). Luego, en cada ronda salen dos dados iguales
 para todos, y cada uno anota el otro dado junto al ancla (60 s; quien no juega, pasa).
 
-**Desconexión:** quien pasa más de 10 segundos sin preguntar queda fuera, igual que quien se
-rinde. Con 2 jugadores, si uno sale gana el otro. **Si se va el anfitrión, ganan los demás.**
+**Desconexión:** quien pasa más de 10 segundos sin hablarle a la sala (preguntar, jugar o
+cualquier otro pedido cuenta) queda fuera, igual que quien se rinde. Con 2 jugadores, si uno sale gana el otro. **Si se va el anfitrión, ganan los demás.**
 Con 3 o más, si se va otro la partida sigue, y si queda uno solo, gana. Quien queda fuera
 conserva los puntos que ya había ganado, pero no puede ganar.
 

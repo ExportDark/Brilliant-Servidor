@@ -589,12 +589,16 @@ class Salas:
         return sala
 
     def _miembro(self, codigo, usuario: str, ahora: float) -> tuple[Sala, Jugador]:
-        sala = self._sala(codigo, ahora)
+        # Hablarle a la sala cuenta como estar conectado, igual que preguntar (`estado`):
+        # el contacto se anota antes de mirar quién se desconectó. Si no, quien vuelve de
+        # un silencio con una jugada quedaba fuera por su propio pedido.
+        sala = self._sala(codigo, ahora, actualizar=False)
         jugador = sala.jugadores.get(usuario)
         if jugador is None:
             raise ErrorDeSala('no_eres_parte', 'No estás en esta sala.', 403)
         if jugador.estado == ACTIVO:
             jugador.ultimo_contacto = ahora
+        self._actualizar(sala, ahora)
         return sala, jugador
 
     @staticmethod

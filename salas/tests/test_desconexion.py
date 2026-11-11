@@ -251,6 +251,26 @@ def test_si_los_dos_dejan_de_preguntar_gana_quien_vuelve_primero(salas, reloj, d
     assert salas.estado(codigo, 'beto')['yo']['estado'] == DESCONECTADO
 
 
+def test_volver_de_un_silencio_con_una_jugada_cuenta_igual_que_volver_preguntando(
+    salas, reloj, dados
+):
+    codigo = empezar_partida(salas, dados, ['ana', 'beto'])
+
+    reloj.avanzar(SEGUNDOS_PARA_DESCONECTAR + 1)
+    # Los dos pasaron el límite. Ana vuelve con una jugada, no con una pregunta: también
+    # cuenta como estar conectada, así que beto queda fuera y gana ana. Antes la jugada de
+    # ana la dejaba fuera a ella misma y no ganaba nadie.
+    with pytest.raises(ErrorDeSala) as error:
+        salas.jugar(codigo, 'ana', 1, 1, 'D1')
+
+    assert error.value.codigo == 'estado_incorrecto'
+    sala = salas._salas[codigo]
+    assert sala.motivo == ULTIMO_JUGADOR
+    assert sala.ganadores == ['ana']
+    assert sala.jugadores['ana'].estado == ACTIVO
+    assert sala.jugadores['beto'].estado == DESCONECTADO
+
+
 def test_si_se_desconectan_todos_nadie_gana(salas, reloj, dados):
     codigo = empezar_partida(salas, dados, ['ana', 'beto', 'carla'])
 
