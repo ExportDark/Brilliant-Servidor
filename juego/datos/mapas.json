@@ -1,0 +1,462 @@
+{
+ "mapas": [
+  {
+   "nivel": 1,
+   "iniciales": [
+    "C1",
+    "F2",
+    "B4",
+    "E4",
+    "C6",
+    "E7"
+   ],
+   "zonas": [
+    {
+     "id": 1,
+     "tipo": "amarillo",
+     "casillas": [
+      "A1",
+      "G1",
+      "D4",
+      "A7",
+      "G7"
+     ]
+    },
+    {
+     "id": 2,
+     "tipo": "verde",
+     "casillas": [
+      "B1",
+      "A2",
+      "B2",
+      "A3",
+      "A4",
+      "A5"
+     ]
+    },
+    {
+     "id": 3,
+     "tipo": "verde",
+     "casillas": [
+      "G2",
+      "G3",
+      "F3",
+      "E4",
+      "F4",
+      "G4"
+     ]
+    },
+    {
+     "id": 4,
+     "tipo": "azul",
+     "casillas": [
+      "C1",
+      "C2",
+      "D2",
+      "D3"
+     ]
+    },
+    {
+     "id": 5,
+     "tipo": "azul",
+     "casillas": [
+      "G5",
+      "G6",
+      "F6",
+      "F7"
+     ]
+    },
+    {
+     "id": 6,
+     "tipo": "morado",
+     "casillas": [
+      "D1",
+      "E1",
+      "F1",
+      "E2",
+      "F2",
+      "E3"
+     ]
+    },
+    {
+     "id": 7,
+     "tipo": "morado",
+     "casillas": [
+      "C4",
+      "C5",
+      "D5",
+      "C6",
+      "C7",
+      "B7"
+     ]
+    },
+    {
+     "id": 8,
+     "tipo": "rojo",
+     "casillas": [
+      "B3",
+      "C3",
+      "B4",
+      "B5",
+      "B6",
+      "A6"
+     ]
+    },
+    {
+     "id": 9,
+     "tipo": "rojo",
+     "casillas": [
+      "E5",
+      "F5",
+      "E6",
+      "D6",
+      "D7",
+      "E7"
+     ]
+    }
+   ]
+  },
+  {
+   "nivel": 2,
+   "iniciales": [
+    "E1",
+    "A3",
+    "C4",
+    "F5",
+    "B6",
+    "E7"
+   ],
+   "zonas": [
+    {
+     "id": 1,
+     "tipo": "amarillo",
+     "casillas": [
+      "B2",
+      "F2",
+      "D4",
+      "B6",
+      "F6"
+     ]
+    },
+    {
+     "id": 2,
+     "tipo": "verde",
+     "casillas": [
+      "E1",
+      "F1",
+      "G1",
+      "G2",
+      "G3"
+     ]
+    },
+    {
+     "id": 3,
+     "tipo": "verde",
+     "casillas": [
+      "A5",
+      "A6",
+      "A7",
+      "B7",
+      "C7"
+     ]
+    },
+    {
+     "id": 4,
+     "tipo": "azul",
+     "casillas": [
+      "C2",
+      "D2",
+      "E2",
+      "D3",
+      "E3"
+     ]
+    },
+    {
+     "id": 5,
+     "tipo": "azul",
+     "casillas": [
+      "C5",
+      "D5",
+      "C6",
+      "D6",
+      "E6"
+     ]
+    },
+    {
+     "id": 6,
+     "tipo": "morado",
+     "casillas": [
+      "A1",
+      "B1",
+      "C1",
+      "A2",
+      "A3"
+     ]
+    },
+    {
+     "id": 7,
+     "tipo": "morado",
+     "casillas": [
+      "G5",
+      "G6",
+      "E7",
+      "F7",
+      "G7"
+     ]
+    },
+    {
+     "id": 8,
+     "tipo": "rojo",
+     "casillas": [
+      "B3",
+      "C3",
+      "A4",
+      "B4",
+      "C4",
+      "B5"
+     ]
+    },
+    {
+     "id": 9,
+     "tipo": "rojo",
+     "casillas": [
+      "F3",
+      "E4",
+      "F4",
+      "G4",
+      "E5",
+      "F5"
+     ]
+    },
+    {
+     "id": 10,
+     "tipo": "gris",
+     "casillas": [
+      "D1",
+      "D7"
+     ]
+    }
+   ]
+  },
+  {
+   "nivel": 3,
+   "iniciales": [
+    "C2",
+    "F2",
+    "D4",
+    "B5",
+    "G5",
+    "C7"
+   ],
+   "zonas": [
+    {
+     "id": 1,
+     "tipo": "amarillo",
+     "casillas": [
+      "A1",
+      "B1",
+      "B2",
+      "F1",
+      "G1",
+      "F2"
+     ]
+    },
+    {
+     "id": 2,
+     "tipo": "verde",
+     "casillas": [
+      "A5",
+      "G5",
+      "A6",
+      "B6",
+      "C6",
+      "D6",
+      "E6",
+      "F6",
+      "G6"
+     ]
+    },
+    {
+     "id": 3,
+     "tipo": "azul",
+     "casillas": [
+      "B5",
+      "C5",
+      "D5",
+      "E5",
+      "F5"
+     ]
+    },
+    {
+     "id": 4,
+     "tipo": "morado",
+     "casillas": [
+      "C1",
+      "E1",
+      "C2",
+      "D2",
+      "E2",
+      "D3"
+     ]
+    },
+    {
+     "id": 5,
+     "tipo": "morado",
+     "casillas": [
+      "A7",
+      "B7",
+      "C7",
+      "E7",
+      "F7",
+      "G7"
+     ]
+    },
+    {
+     "id": 6,
+     "tipo": "rojo",
+     "casillas": [
+      "A3",
+      "B3",
+      "C3",
+      "A4",
+      "B4",
+      "C4"
+     ]
+    },
+    {
+     "id": 7,
+     "tipo": "rojo",
+     "casillas": [
+      "E3",
+      "F3",
+      "G3",
+      "E4",
+      "F4",
+      "G4"
+     ]
+    },
+    {
+     "id": 8,
+     "tipo": "gris",
+     "casillas": [
+      "D1",
+      "A2",
+      "G2",
+      "D4",
+      "D7"
+     ]
+    }
+   ]
+  },
+  {
+   "nivel": 4,
+   "iniciales": [
+    "E1",
+    "C3",
+    "F3",
+    "A4",
+    "E6",
+    "B7"
+   ],
+   "zonas": [
+    {
+     "id": 1,
+     "tipo": "amarillo",
+     "casillas": [
+      "A2",
+      "G2",
+      "A4",
+      "G4",
+      "A6",
+      "G6"
+     ]
+    },
+    {
+     "id": 2,
+     "tipo": "verde",
+     "casillas": [
+      "D2",
+      "B4",
+      "F4",
+      "D6"
+     ]
+    },
+    {
+     "id": 3,
+     "tipo": "azul",
+     "casillas": [
+      "C2",
+      "E2",
+      "C4",
+      "E4",
+      "C6",
+      "E6"
+     ]
+    },
+    {
+     "id": 4,
+     "tipo": "morado",
+     "casillas": [
+      "C3",
+      "D3",
+      "E3",
+      "D4",
+      "C5",
+      "D5",
+      "E5"
+     ]
+    },
+    {
+     "id": 5,
+     "tipo": "rojo",
+     "casillas": [
+      "B2",
+      "A3",
+      "B3",
+      "A5",
+      "B5",
+      "B6"
+     ]
+    },
+    {
+     "id": 6,
+     "tipo": "rojo",
+     "casillas": [
+      "F2",
+      "F3",
+      "G3",
+      "F5",
+      "G5",
+      "F6"
+     ]
+    },
+    {
+     "id": 7,
+     "tipo": "naranja_alto",
+     "casillas": [
+      "A1",
+      "B1",
+      "C1",
+      "D1",
+      "E1",
+      "F1",
+      "G1"
+     ]
+    },
+    {
+     "id": 8,
+     "tipo": "naranja_bajo",
+     "casillas": [
+      "A7",
+      "B7",
+      "C7",
+      "D7",
+      "E7",
+      "F7",
+      "G7"
+     ]
+    }
+   ]
+  }
+ ]
+}
