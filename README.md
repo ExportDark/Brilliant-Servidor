@@ -1,8 +1,9 @@
 # Servidor de cuentas de Brilliant
 
-Un programa aparte de la app (que vive en su propio repositorio, `Brilliant`): guarda las
-cuentas de los jugadores y les da sesiones. La app se registra aquí, inicia sesión y puede
-borrar su cuenta. Se hablan solo por HTTPS; no comparten código.
+Un programa aparte de la app (que vive en su propio repositorio,
+https://github.com/ExportDark/Brilliant): guarda las cuentas de los jugadores y les da
+sesiones, y lleva las salas del multijugador. La app se registra aquí, inicia sesión y
+puede borrar su cuenta. Se hablan solo por HTTPS; no comparten código.
 
 Está hecho con paquetes que ya implementan la autenticación, sin sockets a mano:
 
