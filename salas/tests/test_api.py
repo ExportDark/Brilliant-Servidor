@@ -260,3 +260,28 @@ def test_el_registro_vacio_tras_un_reinicio_responde_404_no_500():
     respuesta = _cliente('ana').get(f'/salas/{codigo}/')
 
     assert (respuesta.status_code, respuesta.data['codigo']) == (404, 'sala_no_existe')
+
+
+def test_salirse_del_lobby_responde_bien_aunque_ya_no_se_este_en_la_sala():
+    ana, beto = _cliente('ana'), _cliente('beto')
+    codigo = _crear(ana)
+    beto.post(f'/salas/{codigo}/unirse/', format='json')
+
+    respuesta = beto.post(f'/salas/{codigo}/rendirse/', format='json')
+
+    # Salió bien: no es un error aunque ya no pueda ver la sala.
+    assert respuesta.status_code == 204
+    assert [j['usuario'] for j in ana.get(f'/salas/{codigo}/').data['jugadores']] == ['ana']
+    assert beto.get(f'/salas/{codigo}/').status_code == 403
+
+
+def test_si_el_anfitrion_sale_del_lobby_ve_la_sala_cerrada():
+    ana, beto = _cliente('ana'), _cliente('beto')
+    codigo = _crear(ana)
+    beto.post(f'/salas/{codigo}/unirse/', format='json')
+
+    respuesta = ana.post(f'/salas/{codigo}/rendirse/', format='json')
+
+    assert respuesta.status_code == 200
+    assert respuesta.data['estado'] == 'terminada'
+    assert respuesta.data['resultado']['motivo'] == 'anfitrion_se_fue'

@@ -105,6 +105,10 @@ class Jugada(_VistaDeSala):
 
 class Rendirse(_VistaDeSala):
     def post(self, request, codigo):
+        """Salirse de la sala. En la partida responde la sala (con el resultado, si terminó).
+        Al salir del lobby, quien sale ya no está en la sala y no tiene qué ver: responde 204."""
         usuario = request.user.get_username()
         sala = _registro().rendirse(codigo, usuario)
+        if usuario not in sala.jugadores:
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return self._vista(sala.codigo, usuario)
