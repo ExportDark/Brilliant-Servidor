@@ -1,7 +1,8 @@
 # Servidor de cuentas de Brilliant
 
-Un programa aparte de la app: guarda las cuentas de los jugadores y les da sesiones.
-La app se registra aquí, inicia sesión y puede borrar su cuenta.
+Un programa aparte de la app (que vive en su propio repositorio, `Brilliant`): guarda las
+cuentas de los jugadores y les da sesiones. La app se registra aquí, inicia sesión y puede
+borrar su cuenta. Se hablan solo por HTTPS; no comparten código.
 
 Está hecho con paquetes que ya implementan la autenticación, sin sockets a mano:
 
@@ -125,7 +126,7 @@ abajo).
   detecta `red_local.py`). Se regenera cada vez que se levanta el servidor, así que sigue
   sirviendo aunque cambie la IP.
 
-Copia el certificado **público** de la autoridad a la app
+Hay que copiar el certificado **público** de la autoridad (`certificados\ca.pem`) a la app
 (`assets\certificados\brilliant_ca.pem`). Las claves privadas nunca salen de esta PC ni se
 suben al repo.
 

@@ -1,7 +1,8 @@
 """Genera los certificados para servir la API con HTTPS en la red local.
 
 - Una **autoridad certificadora local**, que se crea una sola vez y dura 10 años.
-  Su certificado público se copia a la app (`assets/certificados/brilliant_ca.pem`),
+  Su certificado público (`certificados/ca.pem`) hay que copiarlo **a mano** a la app
+  (`assets/certificados/brilliant_ca.pem`, en el repo de la app), una sola vez,
   que solo confía en ella para hablar con el servidor.
 - El **certificado del servidor**, firmado por esa autoridad, para `localhost`,
   `127.0.0.1`, `10.0.2.2` (el emulador de Android) y las IPs de todas las
@@ -18,7 +19,6 @@ Uso: python generar_certificados.py [IP extra ...]
 """
 
 import ipaddress
-import shutil
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -36,7 +36,6 @@ CA_CERTIFICADO = CARPETA / 'ca.pem'
 CA_CLAVE = CARPETA / 'ca.key'
 SERVIDOR_CERTIFICADO = CARPETA / 'servidor.pem'
 SERVIDOR_CLAVE = CARPETA / 'servidor.key'
-EN_LA_APP = AQUI.parent / 'assets' / 'certificados' / 'brilliant_ca.pem'
 
 
 def _guardar_clave(clave, archivo: Path) -> None:
@@ -118,11 +117,11 @@ def main(ips_extra: list[str]) -> None:
     ips = list(dict.fromkeys(['127.0.0.1', '10.0.2.2', *ips_de_esta_pc(), *ips_extra]))
     _certificado_del_servidor(ca, ca_clave, ips)
 
-    EN_LA_APP.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(CA_CERTIFICADO, EN_LA_APP)
-
     print(f'Certificado del servidor para localhost y {", ".join(ips)}.')
-    print(f'La app confía en la autoridad copiada a {EN_LA_APP.relative_to(AQUI.parent)}.')
+    print(f'La app solo confía en la autoridad {CA_CERTIFICADO.relative_to(AQUI)}: si la app '
+          'todavía no la tiene,')
+    print('cópiala a assets/certificados/brilliant_ca.pem en el repo de la app y vuelve a '
+          'compilarla.')
     para_la_app = ips_para_la_app()
     if para_la_app:
         print()

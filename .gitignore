@@ -1,0 +1,8 @@
+# Entorno de Python, secretos y datos de cada PC.
+.venv/
+.env
+db.sqlite3
+certificados/
+__pycache__/
+.pytest_cache/
+*.pyc
