@@ -82,6 +82,7 @@ Todo bajo `/auth/`, en JSON:
 | `GET /auth/users/me/` | Quién soy | — |
 | `POST /auth/token/logout/` | Cerrar esta sesión | — |
 | `DELETE /auth/users/me/` | Borrar la cuenta | `current_password` |
+| `GET /servidor/` | El nombre del servidor ("Brilliant en ORION"), **sin sesión**: la app lo pide al encontrarlo probando las direcciones de su red, cuando el anuncio mDNS no llega | — |
 
 Las rutas con sesión llevan el header `Authorization: Token <token>`. Los errores vienen en
 español, por campo: `{"password": ["Esta contraseña es demasiado corta..."]}`.

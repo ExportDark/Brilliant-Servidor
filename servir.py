@@ -47,6 +47,7 @@ def puerto_ocupado(puerto: int) -> bool:
 
 def informacion_del_servicio(ips: list[str], nombre_de_la_pc: str) -> ServiceInfo:
     """El anuncio del servidor: "Brilliant en <PC>", con sus IPs y su puerto."""
+    # El mismo nombre que da `GET /servidor/` (brilliant_servidor/views.py).
     nombre = f'Brilliant en {nombre_de_la_pc}'
     return ServiceInfo(
         TIPO,
