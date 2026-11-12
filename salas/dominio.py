@@ -13,6 +13,7 @@ tiempo de la ronda cuando alguien le pregunta.
 """
 
 import random
+import secrets
 import threading
 import time
 from dataclasses import dataclass, field
@@ -59,6 +60,8 @@ PASO = 'paso'
 TABLERO_LLENO = 'tablero_lleno'
 SIN_JUGADAS = 'sin_jugadas'
 ANFITRION_SE_FUE = 'anfitrion_se_fue'
+# El anfitrión se fue del lobby, antes de empezar: no hubo partida, la sala se cerró.
+SALA_CERRADA = 'sala_cerrada'
 ULTIMO_JUGADOR = 'ultimo_jugador'
 TODOS_SE_FUERON = 'todos_se_fueron'
 
@@ -396,8 +399,9 @@ class Salas:
 
     def _salir_del_lobby(self, sala: Sala, usuario: str, ahora: float) -> None:
         if usuario == sala.anfitrion:
-            # Sin anfitrión no hay quien empiece: la sala se cierra.
-            self._terminar(sala, ANFITRION_SE_FUE, [], ahora)
+            # Sin anfitrión no hay quien empiece: la sala se cierra. No hubo partida, así
+            # que no es "ganan los demás".
+            self._terminar(sala, SALA_CERRADA, [], ahora)
             return
         sala.jugadores.pop(usuario, None)
         sala.cambio()
@@ -575,8 +579,10 @@ class Salas:
     # ---------------------------------------------------------------- ayudantes
 
     def _codigo_nuevo(self) -> str:
+        # Con `secrets` y no con el azar de los dados: un código no se puede adivinar
+        # sabiendo los anteriores.
         while True:
-            codigo = ''.join(self._azar.choice(ALFABETO_DEL_CODIGO) for _ in range(LARGO_DEL_CODIGO))
+            codigo = ''.join(secrets.choice(ALFABETO_DEL_CODIGO) for _ in range(LARGO_DEL_CODIGO))
             if codigo not in self._salas:
                 return codigo
 
@@ -624,7 +630,12 @@ class Salas:
 
     def _exigir_sin_sala(self, usuario: str, ahora: float) -> None:
         if self._sala_activa_de(usuario, ahora) is not None:
-            raise ErrorDeSala('ya_estas_en_una_sala', 'Ya estás en otra sala.', 409)
+            raise ErrorDeSala(
+                'ya_estas_en_una_sala',
+                'Tu partida anterior sigue abierta. Si cerraste la app, se libera sola en unos '
+                'segundos.',
+                409,
+            )
 
     def _limpiar(self, ahora: float) -> None:
         """Olvida las salas terminadas hace rato."""

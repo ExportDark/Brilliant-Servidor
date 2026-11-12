@@ -4,7 +4,7 @@ import pytest
 
 from salas.dominio import (
     ALFABETO_DEL_CODIGO,
-    ANFITRION_SE_FUE,
+    SALA_CERRADA,
     ESPERANDO,
     LARGO_DEL_CODIGO,
     MAXIMO_DE_JUGADORES,
@@ -212,8 +212,11 @@ def test_si_el_anfitrion_sale_del_lobby_la_sala_se_cierra(salas):
 
     sala = salas._salas[codigo]
     assert sala.estado == TERMINADA
-    assert sala.motivo == ANFITRION_SE_FUE
-    assert salas.estado(codigo, 'beto')['resultado']['motivo'] == ANFITRION_SE_FUE
+    assert sala.motivo == SALA_CERRADA
+    resultado = salas.estado(codigo, 'beto')['resultado']
+    # No hubo partida: nadie gana, y el motivo no es "ganan los demás".
+    assert resultado['motivo'] == SALA_CERRADA
+    assert resultado['ganadores'] == []
     # Los demás quedan libres para entrar a otra sala.
     assert salas.sala_de('beto') is None
 

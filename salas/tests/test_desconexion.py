@@ -14,6 +14,7 @@ from salas.dominio import (
     ESPERANDO,
     JUGANDO,
     PREPARANDO,
+    SALA_CERRADA,
     SE_RINDIO,
     SEGUNDOS_PARA_DESCONECTAR,
     TERMINADA,
@@ -313,7 +314,7 @@ def test_en_el_lobby_si_el_anfitrion_deja_de_preguntar_la_sala_se_cierra(salas, 
 
     sala = salas._salas[codigo]
     assert sala.estado == TERMINADA
-    assert sala.motivo == ANFITRION_SE_FUE
+    assert sala.motivo == SALA_CERRADA
     assert salas.sala_de('beto') is None
 
 

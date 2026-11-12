@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import registro as modulo_registro
-from .dominio import ErrorDeSala
+from .dominio import SALA_CERRADA, ErrorDeSala
 
 
 def _registro():
@@ -106,9 +106,11 @@ class Jugada(_VistaDeSala):
 class Rendirse(_VistaDeSala):
     def post(self, request, codigo):
         """Salirse de la sala. En la partida responde la sala (con el resultado, si terminó).
-        Al salir del lobby, quien sale ya no está en la sala y no tiene qué ver: responde 204."""
+        Al salir del lobby, quien sale ya no está en la sala y no tiene qué ver: responde 204.
+        El anfitrión que cierra el lobby, tampoco."""
         usuario = request.user.get_username()
         sala = _registro().rendirse(codigo, usuario)
-        if usuario not in sala.jugadores:
+        cerro_el_lobby = sala.motivo == SALA_CERRADA and usuario == sala.anfitrion
+        if usuario not in sala.jugadores or cerro_el_lobby:
             return Response(status=status.HTTP_204_NO_CONTENT)
         return self._vista(sala.codigo, usuario)

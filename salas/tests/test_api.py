@@ -275,13 +275,16 @@ def test_salirse_del_lobby_responde_bien_aunque_ya_no_se_este_en_la_sala():
     assert beto.get(f'/salas/{codigo}/').status_code == 403
 
 
-def test_si_el_anfitrion_sale_del_lobby_ve_la_sala_cerrada():
+def test_si_el_anfitrion_cierra_el_lobby_sale_con_204_y_los_demas_ven_la_sala_cerrada():
     ana, beto = _cliente('ana'), _cliente('beto')
     codigo = _crear(ana)
     beto.post(f'/salas/{codigo}/unirse/', format='json')
 
     respuesta = ana.post(f'/salas/{codigo}/rendirse/', format='json')
 
-    assert respuesta.status_code == 200
-    assert respuesta.data['estado'] == 'terminada'
-    assert respuesta.data['resultado']['motivo'] == 'anfitrion_se_fue'
+    # El anfitrión sale sin nada que ver, igual que cualquiera que sale del lobby.
+    assert respuesta.status_code == 204
+    vista = beto.get(f'/salas/{codigo}/').data
+    assert vista['estado'] == 'terminada'
+    assert vista['resultado']['motivo'] == 'sala_cerrada'
+    assert vista['resultado']['ganadores'] == []

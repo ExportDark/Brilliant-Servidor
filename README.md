@@ -112,7 +112,7 @@ las salas y las partidas en curso terminan. Todas las rutas piden sesión.
 | `POST /salas/{código}/empezar/` | El anfitrión, con 2 o más jugadores |
 | `POST /salas/{código}/preparacion/` | `{"valores": {"E1": 1, ...}}`: los números del 1 al 6 en las 6 casillas iniciales |
 | `POST /salas/{código}/jugada/` | `{"ronda", "dado_ancla", "casilla"}` o `{"ronda", "pasar": true}` |
-| `POST /salas/{código}/rendirse/` | Se sale (en el lobby, solo sale; en la partida, queda fuera) |
+| `POST /salas/{código}/rendirse/` | Se sale. En el lobby solo sale (204); si es el anfitrión, la sala se cierra con el motivo `sala_cerrada` y nadie gana. En la partida, queda fuera |
 | `GET /salas/{código}/?version=N` | El estado para quien pregunta; 304 si no cambió. **Preguntar cuenta como estar conectado** |
 
 Cada pedido que cambia algo responde con el mismo estado que el `GET`. Los errores salen como
