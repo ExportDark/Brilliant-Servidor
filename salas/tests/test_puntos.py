@@ -303,3 +303,15 @@ def test_la_partida_terminada_por_tablero_lleno_da_los_ganadores_por_puntos(sala
 
     assert sala.estado == TERMINADA
     assert sala.ganadores == ['beto']
+
+
+def test_cada_zona_dice_lo_que_paga_cada_puesto_segun_el_mapa(salas, dados):
+    codigo = empezar_partida(salas, dados, ['ana', 'beto'])
+
+    zonas = {z['id']: z for z in salas.estado(codigo, 'ana')['zonas']}
+
+    # El mapa 2: la gris paga 3/2/1, y todas las zonas traen sus tres puestos.
+    assert zonas[GRIS]['puntos_por_puesto'] == [3, 2, 1]
+    for zona in zonas.values():
+        assert len(zona['puntos_por_puesto']) == 3
+        assert zona['puntos_siguiente'] == zona['puntos_por_puesto'][0]

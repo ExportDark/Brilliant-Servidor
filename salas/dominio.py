@@ -558,6 +558,11 @@ class Salas:
             'puestos': [dict(p) for p in tomados],
             'agotada': agotada,
             'puntos_siguiente': 0 if agotada else puntuacion.puntos_del_puesto(sala.nivel, zona.tipo, siguiente),
+            # Lo que paga cada puesto (1.º, 2.º, 3.º), para que la app los muestre todos.
+            'puntos_por_puesto': [
+                puntuacion.puntos_del_puesto(sala.nivel, zona.tipo, puesto)
+                for puesto in range(1, puntuacion.PUESTOS_QUE_PAGAN + 1)
+            ],
         }
 
     @staticmethod
