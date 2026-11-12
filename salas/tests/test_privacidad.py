@@ -12,7 +12,10 @@ from .ayudantes import empezar_partida, empezar_preparacion
 
 # Lo único que puede decir la vista de cada uno de los otros jugadores.
 CLAVES_PUBLICAS_DE_UN_JUGADOR = {'usuario', 'estado', 'anfitrion', 'listo', 'puntos', 'primeros', 'zonas'}
-CLAVES_DE_UNA_ZONA = {'id', 'tipo', 'color', 'casillas', 'puestos', 'agotada', 'puntos_siguiente'}
+# `puntos_por_puesto` es la tabla de puntos del mapa: pública, igual para todos.
+CLAVES_DE_UNA_ZONA = {
+    'id', 'tipo', 'color', 'casillas', 'puestos', 'agotada', 'puntos_siguiente', 'puntos_por_puesto',
+}
 
 
 def _tableros_en(vista) -> int:
