@@ -96,7 +96,10 @@ def test_una_partida_entera_termina_cumple_las_reglas_y_suma_bien(nivel, cuantos
     salas, sala, usuarios = _simular(nivel, cuantos, semilla=nivel * 100 + cuantos)
 
     assert sala.estado == TERMINADA
-    assert sala.motivo in ('tablero_lleno', 'sin_jugadas')
+    assert sala.motivo in ('tablero_lleno', 'sin_jugadas', 'meta_alcanzada')
+    if sala.motivo == 'meta_alcanzada':
+        # Terminó en cuanto alguien llegó, y ganó alguien que llegó.
+        assert all(sala.jugadores[u].puntos >= sala.meta for u in sala.ganadores)
     assert sala.ganadores  # alguien gana
     assert set(sala.ganadores) <= set(usuarios)
     for usuario in usuarios:

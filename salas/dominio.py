@@ -64,6 +64,8 @@ ANFITRION_SE_FUE = 'anfitrion_se_fue'
 SALA_CERRADA = 'sala_cerrada'
 ULTIMO_JUGADOR = 'ultimo_jugador'
 TODOS_SE_FUERON = 'todos_se_fueron'
+# Alguien llegó a la meta de puntos (ver puntuacion.META_POR_JUGADORES).
+META_ALCANZADA = 'meta_alcanzada'
 
 
 class ErrorDeSala(Exception):
@@ -103,6 +105,9 @@ class Sala:
     dados: tuple[int, int] | None = None
     limite: float | None = None
     motivo: str | None = None
+    # Los puntos para ganar. Se fija al empezar, con los que empiezan: no cambia si
+    # después alguien se va.
+    meta: int | None = None
     ganadores: list[str] = field(default_factory=list)
     terminada_en: float | None = None
     # zona -> quiénes la llenaron, en orden: {'usuario', 'puesto', 'ronda'}
@@ -181,6 +186,7 @@ class Salas:
                     409,
                 )
             sala.estado = PREPARANDO
+            sala.meta = puntuacion.meta_para(len(sala.activos()))
             sala.limite = ahora + SEGUNDOS_DE_PREPARACION
             for jugador in sala.jugadores.values():
                 jugador.tablero = Tablero.vacio(sala.nivel)
@@ -432,10 +438,22 @@ class Salas:
 
     def _cerrar_ronda(self, sala: Sala, ahora: float) -> None:
         """Todos jugaron: se reparten los puestos de las zonas que se llenaron en esta
-        ronda y empieza la siguiente."""
+        ronda. Si alguien llegó a la meta, la partida termina; si no, empieza la
+        siguiente."""
         self._repartir_puestos(sala)
         sala.cambio()
+        if self._alguien_llego_a_la_meta(sala):
+            # Si llegaron varios en la misma ronda, gana el que más puntos tiene (y si
+            # empatan, el de más primeros puestos), como siempre.
+            self._terminar(sala, META_ALCANZADA, self._ganadores_por_puntos(sala), ahora)
+            return
         self._siguiente_ronda(sala, ahora)
+
+    @staticmethod
+    def _alguien_llego_a_la_meta(sala: Sala) -> bool:
+        """Si algún jugador que sigue en la partida llegó a la meta. Los que se fueron no
+        cuentan, aunque tengan más puntos."""
+        return sala.meta is not None and any(j.puntos >= sala.meta for j in sala.activos())
 
     def _repartir_puestos(self, sala: Sala) -> None:
         for zona in mapas()[sala.nivel].zonas:
@@ -492,6 +510,8 @@ class Salas:
             'nivel': sala.nivel,
             'anfitrion': sala.anfitrion,
             'ronda': sala.ronda,
+            # En el lobby, la que tocaría con los que ya entraron; desde que empieza, la fija.
+            'meta': sala.meta if sala.meta is not None else puntuacion.meta_para(len(sala.activos())),
             'dados': list(sala.dados) if sala.dados and sala.estado == JUGANDO else None,
             'segundos_restantes': (
                 max(0.0, round(sala.limite - ahora, 1)) if sala.limite is not None else None

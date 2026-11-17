@@ -291,6 +291,7 @@ def test_los_que_quedaron_fuera_no_ganan_aunque_tengan_mas_puntos(salas):
 def test_la_partida_terminada_por_tablero_lleno_da_los_ganadores_por_puntos(salas, dados):
     codigo = empezar_partida(salas, dados, ['ana', 'beto'])
     sala = salas._salas[codigo]
+    sala.meta = 1000  # una meta que nadie alcanza: aquí se prueba el tablero lleno
     for jugador in sala.jugadores.values():
         for casilla in jugador.tablero.casillas():
             if casilla != 'D1' and jugador.tablero.valor(casilla) is None:

@@ -134,8 +134,15 @@ conserva los puntos que ya había ganado, pero no puede ganar.
 **Puntos:** cada zona completa da puntos según el puesto en que se llena (1.º, 2.º, 3.º; del
 4.º en adelante, 0), el mapa y el color (`juego/puntuacion.py`). Cada zona paga por
 separado, y si varias personas la llenan en la misma ronda, todas toman el mismo puesto.
-Gana quien más puntos suma; si empatan, quien tenga más 1.º; si siguen empatados, ganan los
-empatados. La partida termina cuando todos llenaron su tablero o nadie puede jugar.
+**Meta:** gana el primero que llega a la meta de puntos, que depende de cuántos empiezan la
+partida: con 2, 26; con 3, 24; con 4, 22; con 5 o 6, 20 (`META_POR_JUGADORES`). Se fija al
+empezar y no cambia si después alguien se va. Los puntos se reparten al cerrar cada ronda:
+si alguien llegó, la partida termina ahí (`meta_alcanzada`). Si llegan varios en la misma
+ronda, gana quien más puntos tiene; si empatan, quien tenga más 1.º; si siguen empatados,
+ganan los empatados. Quien quedó fuera no gana ni termina la partida, aunque tenga más.
+Si nadie llega, la partida termina como antes, cuando todos llenaron su tablero o nadie
+puede jugar, y gana quien más puntos suma, con el mismo desempate. La vista de la sala
+trae la `meta`: en el lobby, la que tocaría con los que ya entraron.
 
 **Privacidad:** nadie ve los números ni las casillas de los demás. Cada jugador recibe su
 propio tablero y sus jugadas legales; de los demás, solo nombre, estado, si ya jugó, puntos
@@ -195,13 +202,13 @@ opcional: la app de Android no lo necesita.
 .venv\Scripts\python.exe -m pytest
 ```
 
-1026 tests (más 1 que se salta a propósito):
+1058 tests (más 1 que se salta a propósito):
 
-- `cuentas\tests\` (86): crear la cuenta, iniciar sesión, quién soy, cerrar sesión, borrar
+- `cuentas\tests\` (88): crear la cuenta, iniciar sesión, quién soy, cerrar sesión, borrar
   la cuenta, la privacidad entre cuentas, las contraseñas y los tokens, las IPs de la PC y
   el anuncio en la red.
 - `juego\tests\` (704): las reglas de color, el tablero y los mapas, la validación de
   jugadas, los puntos, y la paridad con las reglas de la app (320 tableros).
-- `salas\tests\` (236): el lobby, la preparación, las rondas, las desconexiones, los puntos
-  y los puestos, la privacidad, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
+- `salas\tests\` (266): el lobby, la preparación, las rondas, las desconexiones, los puntos
+  y los puestos, la meta, la privacidad, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
   en los 4 mapas, con jugadores que se rinden a la mitad.

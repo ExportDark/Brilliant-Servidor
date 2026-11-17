@@ -46,6 +46,10 @@ PUNTOS = {
 
 PUESTOS_QUE_PAGAN = 3
 
+# La meta: gana la partida el primero que llega a estos puntos, según cuántos la empiezan.
+# Con más jugadores las zonas se reparten entre más, así que la meta baja.
+META_POR_JUGADORES = {2: 26, 3: 24, 4: 22, 5: 20, 6: 20}
+
 
 def color_de(tipo: str) -> str:
     """El color de un tipo de zona: las dos zonas naranjas pagan igual."""
@@ -61,6 +65,13 @@ def puntos_del_puesto(nivel: int, tipo: str, puesto: int) -> int:
     if tabla is None:
         raise ValueError(f'El mapa {nivel} no tiene zonas {tipo!r}')
     return tabla[puesto - 1] if puesto <= PUESTOS_QUE_PAGAN else 0
+
+
+def meta_para(jugadores: int) -> int:
+    """Los puntos a los que hay que llegar para ganar con [jugadores] en la partida. Con
+    menos de 2 (un lobby donde todavía no entró nadie más), la de 2; con más de 6, la de 6."""
+    jugadores = min(max(jugadores, min(META_POR_JUGADORES)), max(META_POR_JUGADORES))
+    return META_POR_JUGADORES[jugadores]
 
 
 def puesto_que_sigue(ya_la_llenaron: int) -> int:

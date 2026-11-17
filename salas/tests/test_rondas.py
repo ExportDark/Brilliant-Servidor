@@ -177,6 +177,9 @@ def test_quien_no_tiene_jugada_con_la_tirada_pasa_solo_y_los_demas_siguen(salas,
     # beto no.
     sala = salas._salas[codigo]
     sala.jugadores['ana'].tablero.valores = {c: 1 for c in sala.jugadores['ana'].tablero.casillas()}
+    # Con el tablero lleno de golpe llenaría todas sus zonas y llegaría a la meta: aquí se
+    # prueba otra cosa.
+    sala.meta = 1000
     dados.poner(2, 3)
     salas.jugar(codigo, 'beto', 1, 1, 'D1')  # cierra la ronda 1 y tira la 2
 
@@ -224,6 +227,9 @@ def test_no_se_puede_jugar_sin_partida_en_juego_ni_despues_de_terminar(salas, da
 def test_la_partida_termina_cuando_todos_llenaron_su_tablero(salas, dados):
     codigo = empezar_partida(salas, dados, ['ana', 'beto'])
     sala = salas._salas[codigo]
+    # Al llenar el tablero se llenan todas las zonas a la vez: con la meta de siempre,
+    # llegarían a ella. Aquí se prueba el otro final.
+    sala.meta = 1000
     # A los dos solo les falta una casilla, la D1, junto a E1 (que tiene un 1).
     for jugador in sala.jugadores.values():
         for casilla in jugador.tablero.casillas():
