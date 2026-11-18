@@ -103,7 +103,9 @@ abajo).
 
 El servidor es el que manda en una partida en línea: tira los dados, valida cada jugada con
 las reglas del juego y calcula los puntos. Todo vive en memoria: si el servidor se reinicia,
-las salas y las partidas en curso terminan. Todas las rutas piden sesión.
+las salas y las partidas en curso terminan. Al crear una sala se ponen al día todas (las
+abandonadas, donde nadie pregunta, terminan) y las que terminaron hace más de 10 minutos se
+olvidan. Todas las rutas piden sesión.
 
 | Método y ruta | Qué hace |
 |---|---|
@@ -134,6 +136,9 @@ conserva los puntos que ya había ganado, pero no puede ganar.
 **Puntos:** cada zona completa da puntos según el puesto en que se llena (1.º, 2.º, 3.º; del
 4.º en adelante, 0), el mapa y el color (`juego/puntuacion.py`). Cada zona paga por
 separado, y si varias personas la llenan en la misma ronda, todas toman el mismo puesto.
+Los puestos se reparten al terminar la ronda, **solo entre los que siguen jugando**: quien
+llenó una zona y se fue (se rindió o se desconectó) antes de que terminara la ronda no se
+lleva el puesto, y la zona le sigue pagando ese puesto al siguiente.
 **Meta:** gana el primero que llega a la meta de puntos, que depende de cuántos empiezan la
 partida: con 2, 26; con 3, 24; con 4, 22; con 5 o 6, 20 (`META_POR_JUGADORES`). Se fija al
 empezar y no cambia si después alguien se va. Los puntos se reparten al cerrar cada ronda:
@@ -205,13 +210,17 @@ opcional: la app de Android no lo necesita.
 .venv\Scripts\python.exe -m pytest
 ```
 
-1067 tests (más 1 que se salta a propósito):
+1093 tests (más 1 que se salta a propósito):
 
 - `cuentas\tests\` (88): crear la cuenta, iniciar sesión, quién soy, cerrar sesión, borrar
   la cuenta, la privacidad entre cuentas, las contraseñas y los tokens, las IPs de la PC y
   el anuncio en la red.
-- `juego\tests\` (704): las reglas de color, el tablero y los mapas, la validación de
+- `juego\tests\` (708): las reglas de color, el tablero y los mapas, la validación de
   jugadas, los puntos, y la paridad con las reglas de la app (320 tableros).
-- `salas\tests\` (275): el lobby, la preparación, las rondas, las desconexiones, los puntos
+- `salas\tests\` (297): el lobby, la preparación, las rondas, las desconexiones, los puntos
   y los puestos, la meta, la privacidad y lo que se ve del tablero de los demás, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
-  en los 4 mapas, con jugadores que se rinden a la mitad.
+  en los 4 mapas, con jugadores que se rinden a la mitad (antes o justo después de anotar).
+  En cada ronda de esas partidas se revisa, desde la vista de cada jugador: que de los demás
+  solo llegue lo público (sus casillas sin números, nunca la de la ronda en curso), que la
+  meta no cambie, que la partida termine en cuanto alguien llega, que quien se fue no sume
+  más puntos, y que con la misma `version` la vista sea la misma (si no, el 304 mentiría).

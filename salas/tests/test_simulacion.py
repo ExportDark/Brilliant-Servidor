@@ -5,13 +5,14 @@ No prueban una regla en particular: prueban que, pase lo que pase, la partida te
 se rompe, las reglas de cada zona se cumplen y los puntos suman lo que dice la tabla.
 """
 
+import json
 import random
 
 import pytest
 
 from juego import puntuacion
 from juego.reglas import puede_agregar
-from juego.tablero import mapas
+from juego.tablero import casilla_valida, mapas
 from salas.dominio import (
     ACTIVO,
     JUGANDO,
@@ -21,12 +22,16 @@ from salas.dominio import (
 )
 
 from .ayudantes import DadosFalsos, RelojFalso, armar_sala, pasar_tiempo
+from .test_privacidad import CLAVES_PUBLICAS_DE_UN_JUGADOR
 
 MAXIMO_DE_RONDAS = 400
 
 
-def _jugar_una_ronda(salas, codigo, activos, azar):
-    """Cada jugador activo pendiente anota en una casilla legal al azar."""
+def _jugar_una_ronda(salas, codigo, activos, azar, se_rinde_despues=None):
+    """Cada jugador activo pendiente anota en una casilla legal al azar. [se_rinde_despues]
+    juega primero y se rinde enseguida, con la ronda todavía abierta."""
+    if se_rinde_despues in activos:
+        activos = [se_rinde_despues] + [u for u in activos if u != se_rinde_despues]
     for usuario in activos:
         vista = salas.estado(codigo, usuario)
         if vista['estado'] != JUGANDO or vista['yo']['accion'] != 'pendiente':
@@ -35,10 +40,52 @@ def _jugar_una_ronda(salas, codigo, activos, azar):
         assert jugadas, f'{usuario} está pendiente pero no tiene jugadas'
         jugada = azar.choice(jugadas)
         salas.jugar(codigo, usuario, vista['ronda'], jugada['ancla'], azar.choice(jugada['casillas']))
+        if usuario == se_rinde_despues:
+            salas.rendirse(codigo, usuario)
 
 
-def _simular(nivel: int, cuantos: int, semilla: int, se_van: dict[int, str] | None = None):
-    """Juega una partida entera. [se_van] dice en qué ronda se rinde quién."""
+def _revisar_invariantes(salas, sala, usuarios, meta, puntos_al_irse, vistas_por_version):
+    """Lo que tiene que valer siempre, después de cada ronda y desde la vista de cada uno."""
+    # La meta se fija al empezar y no cambia.
+    assert sala.meta == meta
+    # La partida termina en la ronda en que alguien llega: nunca sigue con alguien en la meta.
+    if sala.estado == JUGANDO:
+        assert not any(j.puntos >= meta for j in sala.activos()), 'siguió con alguien en la meta'
+    # Quien se fue no suma nada más.
+    for usuario, jugador in sala.jugadores.items():
+        if jugador.estado != ACTIVO:
+            puntos_al_irse.setdefault(usuario, jugador.puntos)
+            assert jugador.puntos == puntos_al_irse[usuario], f'{usuario} sumó después de irse'
+
+    for usuario in usuarios:
+        vista = salas.estado(sala.codigo, usuario)
+        # Privacidad: un solo tablero con números (el mío); de los demás, solo lo público.
+        assert json.dumps(vista).count('"tablero"') == 1
+        for otro in vista['jugadores']:
+            assert set(otro) == CLAVES_PUBLICAS_DE_UN_JUGADOR
+            jugador = sala.jugadores[otro['usuario']]
+            casillas = set(jugador.tablero.valores) if jugador.tablero else set()
+            assert all(isinstance(c, str) and casilla_valida(c) for c in otro['ocupadas'])
+            assert set(otro['ocupadas']) <= casillas
+            if vista['estado'] == JUGANDO:
+                assert jugador.jugadas.get(sala.ronda) not in otro['ocupadas']
+            assert otro['ultima'] is None or otro['ultima'] in otro['ocupadas']
+        # La caché del 304: con la misma versión, la misma vista (salvo los segundos, que
+        # la app descuenta sola).
+        sin_reloj = {k: v for k, v in vista.items() if k != 'segundos_restantes'}
+        anterior = vistas_por_version.setdefault((usuario, vista['version']), sin_reloj)
+        assert anterior == sin_reloj, f'la vista de {usuario} cambió sin cambiar de versión'
+
+
+def _simular(
+    nivel: int,
+    cuantos: int,
+    semilla: int,
+    se_van: dict[int, str] | None = None,
+    se_van_despues: dict[int, str] | None = None,
+):
+    """Juega una partida entera. [se_van] dice en qué ronda se rinde quién, antes de
+    anotar; [se_van_despues], quién se rinde después de anotar, con la ronda abierta."""
     azar = random.Random(semilla)
     reloj = RelojFalso()
     dados = DadosFalsos()
@@ -50,15 +97,29 @@ def _simular(nivel: int, cuantos: int, semilla: int, se_van: dict[int, str] | No
     pasar_tiempo(salas, reloj, codigo, usuarios, 60)  # se reparte al azar a todos
 
     se_van = dict(se_van or {})
+    se_van_despues = dict(se_van_despues or {})
+    meta = salas._salas[codigo].meta
+    puntos_al_irse: dict[str, int] = {}
+    vistas_por_version: dict = {}
     for _ in range(MAXIMO_DE_RONDAS):
         sala = salas._salas[codigo]
+        _revisar_invariantes(salas, sala, usuarios, meta, puntos_al_irse, vistas_por_version)
         if sala.estado == TERMINADA:
             return salas, sala, usuarios
         activos = [j.usuario for j in sala.activos()]
         if sala.ronda in se_van and se_van[sala.ronda] in activos:
-            salas.rendirse(codigo, se_van.pop(sala.ronda))
+            quien = se_van.pop(sala.ronda)
+            puntos_al_irse[quien] = sala.jugadores[quien].puntos
+            salas.rendirse(codigo, quien)
             continue
-        _jugar_una_ronda(salas, codigo, activos, azar)
+        # Los puntos de quien se va después de anotar se miran antes de que anote: los
+        # puestos se reparten al terminar la ronda, y ahí no tiene que sumar nada.
+        quien = se_van_despues.pop(sala.ronda, None)
+        if quien in activos:
+            puntos_al_irse[quien] = sala.jugadores[quien].puntos
+        _jugar_una_ronda(salas, codigo, activos, azar, quien)
+        if quien in activos and sala.jugadores[quien].estado == ACTIVO:
+            del puntos_al_irse[quien]  # no tenía jugada y no se fue
         for usuario in activos:  # que sigan conectados
             if salas._salas[codigo].estado != TERMINADA and salas._salas[codigo].jugadores[usuario].estado == ACTIVO:
                 salas.estado(codigo, usuario)
@@ -138,6 +199,26 @@ def test_partidas_en_las_que_se_rinden_jugadores_a_la_mitad_terminan_bien(semill
     activos = [j for j in sala.jugadores.values() if j.estado == ACTIVO]
     assert set(sala.ganadores) <= {j.usuario for j in activos}
     assert len(sala.ganadores) >= 1
+    for usuario in sala.jugadores:
+        _revisar_tablero(sala, usuario)
+    _revisar_puntos(sala)
+
+
+@pytest.mark.parametrize('semilla', range(20))
+def test_quien_se_rinde_justo_despues_de_anotar_no_suma_nada_mas(semilla):
+    """Se rinden 1 a 4 jugadores (no el anfitrión) justo después de anotar, con la ronda
+    todavía abierta. Las revisiones de cada ronda exigen que sus puntos queden como
+    estaban: si su última casilla llenó una zona, ese puesto no es suyo."""
+    azar = random.Random(semilla)
+    usuarios = [f'j{n}' for n in range(1, 7)]
+    quienes = azar.sample(usuarios[1:], k=azar.randint(1, 4))
+    se_van_despues = {azar.randint(4, 20) + 3 * n: u for n, u in enumerate(quienes)}
+
+    salas, sala, _ = _simular(
+        semilla % 4 + 1, 6, semilla=3000 + semilla, se_van_despues=se_van_despues,
+    )
+
+    assert sala.estado == TERMINADA
     for usuario in sala.jugadores:
         _revisar_tablero(sala, usuario)
     _revisar_puntos(sala)

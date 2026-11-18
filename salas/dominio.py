@@ -463,8 +463,10 @@ class Salas:
         for zona in mapas()[sala.nivel].zonas:
             tomados = sala.puestos.setdefault(zona.id, [])
             ya = {p['usuario'] for p in tomados}
+            # Solo los que siguen en la partida: quien anotó y se fue antes de que terminara
+            # la ronda no se lleva el puesto (ni corre a los demás un lugar).
             nuevos = [
-                j for j in sala.jugadores.values()
+                j for j in sala.activos()
                 if j.tablero is not None and j.usuario not in ya and j.tablero.zona_llena(zona)
             ]
             if not nuevos:
@@ -690,7 +692,10 @@ class Salas:
             )
 
     def _limpiar(self, ahora: float) -> None:
-        """Olvida las salas terminadas hace rato."""
+        """Olvida las salas terminadas hace rato. Antes pone al día cada sala: el tiempo de
+        una sala solo corre cuando alguien le pregunta, y si todos cerraron la app nadie
+        lo hace; así quedan todos fuera, termina, y después se olvida como las demás."""
         for codigo, sala in list(self._salas.items()):
+            self._actualizar(sala, ahora)
             if sala.estado == TERMINADA and ahora - (sala.terminada_en or ahora) > SEGUNDOS_PARA_LIMPIAR:
                 del self._salas[codigo]

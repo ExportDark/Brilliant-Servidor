@@ -125,9 +125,12 @@ def test_los_puntos_no_se_dan_hasta_que_se_cierra_la_ronda(salas, dados):
     assert _zona(salas, codigo, 'beto')['puestos'] == []
 
 
-def test_quien_llena_la_zona_y_se_desconecta_en_esa_ronda_conserva_el_puesto(
+def test_quien_llena_la_zona_y_se_desconecta_en_esa_ronda_no_se_lleva_el_puesto(
     salas, reloj, dados
 ):
+    """Los puestos se reparten al terminar la ronda, solo entre los que siguen jugando
+    (decidido el 2026-11-17; antes se lo llevaba). Así no corre a los demás un lugar,
+    cuando él ya no puede ganar."""
     codigo = empezar_partida(salas, dados, ['ana', 'beto', 'carla'], primera_tirada=(1, 3))
     dados.poner(2, 3)
     for usuario in ('ana', 'beto', 'carla'):
@@ -141,8 +144,10 @@ def test_quien_llena_la_zona_y_se_desconecta_en_esa_ronda_conserva_el_puesto(
     _jugar_otra_cosa(salas, codigo, 'ana', 2)
     _jugar_otra_cosa(salas, codigo, 'beto', 2)
 
-    assert _puntos(salas, codigo, 'ana', 'carla') == 3
-    assert _zona(salas, codigo, 'ana')['puestos'][0]['usuario'] == 'carla'
+    assert _puntos(salas, codigo, 'ana', 'carla') == 0
+    assert _zona(salas, codigo, 'ana')['puestos'] == []
+    # La zona le sigue pagando el 1.º al primero de los que siguen jugando.
+    assert _zona(salas, codigo, 'ana')['puntos_siguiente'] == 3
 
 
 def test_quien_se_rinde_conserva_los_puntos_que_ya_gano_pero_no_puede_ganar(salas, dados):
@@ -316,3 +321,26 @@ def test_cada_zona_dice_lo_que_paga_cada_puesto_segun_el_mapa(salas, dados):
     for zona in zonas.values():
         assert len(zona['puntos_por_puesto']) == 3
         assert zona['puntos_siguiente'] == zona['puntos_por_puesto'][0]
+
+
+def _carla_llena_la_gris(salas, codigo):
+    """A carla le falta D1 para llenar la zona gris, y la llena en la ronda 1."""
+    salas._salas[codigo].jugadores['carla'].tablero.poner('D7', 3)
+    salas.jugar(codigo, 'carla', 1, 1, 'D1')
+
+
+def test_quien_se_fue_no_toma_puestos_aunque_haya_anotado_esa_ronda(salas, dados):
+    """Carla llena la gris y se rinde antes de que termine la ronda: no se lleva el 1.º
+    (ni sus puntos), y la gris le sigue pagando el 1.º al primero que siga jugando."""
+    codigo = empezar_partida(salas, dados, ['ana', 'beto', 'carla'])
+    _carla_llena_la_gris(salas, codigo)
+    salas.rendirse(codigo, 'carla')
+
+    salas.jugar(codigo, 'ana', 1, 1, 'D1')
+    salas.jugar(codigo, 'beto', 1, 1, 'D1')
+
+    sala = salas._salas[codigo]
+    assert sala.jugadores['carla'].puntos == 0
+    assert sala.jugadores['carla'].primeros == 0
+    assert sala.puestos.get(GRIS, []) == []
+    assert _zona(salas, codigo, 'ana')['puntos_siguiente'] == 3

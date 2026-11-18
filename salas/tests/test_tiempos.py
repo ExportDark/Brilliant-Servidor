@@ -14,6 +14,7 @@ from salas.dominio import (
     PREPARANDO,
     SEGUNDOS_DE_PREPARACION,
     SEGUNDOS_PARA_DESCONECTAR,
+    SEGUNDOS_PARA_LIMPIAR,
     SEGUNDOS_POR_RONDA,
     TERMINADA,
 )
@@ -160,3 +161,23 @@ def test_10_segundos_justos_sin_preguntar_no_saca_y_10_1_si(salas, reloj, dados)
 
     _avanzar_preguntando(salas, reloj, codigo, ['ana', 'beto'], 0.1)
     assert salas._salas[codigo].jugadores['carla'].estado == DESCONECTADO
+
+
+def test_las_salas_abandonadas_se_limpian(salas, reloj, dados):
+    """Si todos cierran la app, nadie vuelve a preguntar y el tiempo de la sala no corre:
+    al limpiar, se pone al día (todos quedan fuera y termina) y después se borra, como
+    cualquier sala terminada. Si no, quedaban en memoria para siempre."""
+    en_juego = empezar_partida(salas, dados, ['ana', 'beto'])
+    en_el_lobby = armar_sala(salas, ['carla', 'dani'])
+
+    reloj.avanzar(SEGUNDOS_PARA_DESCONECTAR + 1)
+    salas.crear('eva')  # crear una sala limpia las viejas
+
+    for codigo in (en_juego, en_el_lobby):
+        assert salas._salas[codigo].estado == TERMINADA
+
+    reloj.avanzar(SEGUNDOS_PARA_LIMPIAR + 1)
+    salas.crear('fede')
+
+    assert en_juego not in salas._salas
+    assert en_el_lobby not in salas._salas

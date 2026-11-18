@@ -1,6 +1,12 @@
 import pytest
 
-from juego.puntuacion import agotada, color_de, puesto_que_sigue, puntos_del_puesto
+from juego.puntuacion import (
+    META_POR_JUGADORES,
+    agotada,
+    color_de,
+    puesto_que_sigue,
+    puntos_del_puesto,
+)
 from juego.tablero import mapas
 
 # La tabla tal como la escribió el dueño del juego: azul, verde, rojo, morado, amarillo,
@@ -64,3 +70,11 @@ def test_el_puesto_cuenta_personas_asi_que_dos_primeros_dejan_al_tercero():
 
 def test_una_zona_con_tres_puestos_tomados_esta_agotada():
     assert [agotada(n) for n in range(5)] == [False, False, False, True, True]
+
+
+@pytest.mark.parametrize('nivel', [1, 2, 3, 4])
+def test_la_meta_mas_alta_se_puede_alcanzar_en_cada_mapa(nivel):
+    """Si alguien cambia la tabla de puntos o la de metas, que la meta siga siendo posible:
+    los primeros puestos de todas las zonas del mapa suman al menos la meta más alta."""
+    primeros = sum(puntos_del_puesto(nivel, zona.tipo, 1) for zona in mapas()[nivel].zonas)
+    assert primeros >= max(META_POR_JUGADORES.values())
