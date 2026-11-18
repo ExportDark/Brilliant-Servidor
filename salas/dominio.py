@@ -92,6 +92,9 @@ class Jugador:
     primeros: int = 0
     # zona -> (puesto, ronda en que la llenó)
     zonas: dict[int, tuple[int, int]] = field(default_factory=dict)
+    # ronda -> la casilla que anotó en ella. Sirve para que los demás vean su tablero
+    # chico: la de la ronda en curso no se muestra hasta que la ronda termina.
+    jugadas: dict[int, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -274,6 +277,7 @@ class Salas:
                     'jugada_invalida', 'Ahí no se puede anotar.', motivo=resultado,
                 )
             jugador.tablero.poner(casilla, valor)
+            jugador.jugadas[sala.ronda] = casilla
             jugador.accion = COLOCO
             sala.cambio()
             self._actualizar(sala, ahora)
@@ -529,6 +533,7 @@ class Salas:
                     'puntos': j.puntos,
                     'primeros': j.primeros,
                     'zonas': sorted(j.zonas),
+                    **self._tablero_publico(sala, j),
                 }
                 for j in sala.jugadores.values()
             ],
@@ -538,6 +543,28 @@ class Salas:
         if sala.estado == TERMINADA:
             vista['resultado'] = self._resultado(sala)
         return vista
+
+    @staticmethod
+    def _tablero_publico(sala: Sala, jugador: Jugador) -> dict:
+        """Lo que todos ven del tablero de [jugador]: qué casillas tiene ocupadas, nunca
+        con qué número, y cuál ocupó en la última ronda que terminó (`ultima`).
+
+        La casilla de la ronda en curso no se ve hasta que la ronda termina: todos juegan
+        a la vez con los mismos dados, y nadie debe elegir viendo lo que hicieron los
+        demás. En la preparación no se ve nada (el reparto es secreto); al terminar la
+        partida, todo."""
+        if jugador.tablero is None or sala.estado in (ESPERANDO, PREPARANDO):
+            return {'ocupadas': [], 'ultima': None}
+        if sala.estado == JUGANDO:
+            oculta = jugador.jugadas.get(sala.ronda)
+            ultima = jugador.jugadas.get(sala.ronda - 1)
+        else:
+            oculta = None
+            ultima = jugador.jugadas.get(sala.ronda)
+        return {
+            'ocupadas': sorted(c for c in jugador.tablero.valores if c != oculta),
+            'ultima': ultima,
+        }
 
     def _vista_de_mi(self, sala: Sala, jugador: Jugador) -> dict:
         mi = {

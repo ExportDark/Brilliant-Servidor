@@ -11,7 +11,10 @@ from salas.dominio import TERMINADA
 from .ayudantes import empezar_partida, empezar_preparacion
 
 # Lo único que puede decir la vista de cada uno de los otros jugadores.
-CLAVES_PUBLICAS_DE_UN_JUGADOR = {'usuario', 'estado', 'anfitrion', 'listo', 'puntos', 'primeros', 'zonas'}
+# `ocupadas` son nombres de casilla, nunca números (ver test_tableros_ajenos.py).
+CLAVES_PUBLICAS_DE_UN_JUGADOR = {
+    'usuario', 'estado', 'anfitrion', 'listo', 'puntos', 'primeros', 'zonas', 'ocupadas', 'ultima',
+}
 # `puntos_por_puesto` es la tabla de puntos del mapa: pública, igual para todos.
 CLAVES_DE_UNA_ZONA = {
     'id', 'tipo', 'color', 'casillas', 'puestos', 'agotada', 'puntos_siguiente', 'puntos_por_puesto',

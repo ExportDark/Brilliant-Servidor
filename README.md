@@ -144,9 +144,12 @@ Si nadie llega, la partida termina como antes, cuando todos llenaron su tablero 
 puede jugar, y gana quien más puntos suma, con el mismo desempate. La vista de la sala
 trae la `meta`: en el lobby, la que tocaría con los que ya entraron.
 
-**Privacidad:** nadie ve los números ni las casillas de los demás. Cada jugador recibe su
-propio tablero y sus jugadas legales; de los demás, solo nombre, estado, si ya jugó, puntos
-y qué zonas llenó. El panel de zonas (público) dice qué puestos se tomaron y cuántos puntos
+**Privacidad:** nadie ve los números de los demás. Cada jugador recibe su propio tablero y
+sus jugadas legales; de los demás, nombre, estado, si ya jugó, puntos, qué zonas llenó y
+**qué casillas tiene ocupadas** (`ocupadas`, solo los nombres de casilla) con la que ocupó
+en la última ronda (`ultima`), para el tablero chico de la app. La casilla de la ronda en
+curso no se ve hasta que la ronda termina (todos juegan a la vez con los mismos dados); en
+la preparación no se ve nada; al terminar la partida, todo. El panel de zonas (público) dice qué puestos se tomaron y cuántos puntos
 da el siguiente, o "agotada".
 
 ### Las reglas del juego, en Python
@@ -202,13 +205,13 @@ opcional: la app de Android no lo necesita.
 .venv\Scripts\python.exe -m pytest
 ```
 
-1058 tests (más 1 que se salta a propósito):
+1067 tests (más 1 que se salta a propósito):
 
 - `cuentas\tests\` (88): crear la cuenta, iniciar sesión, quién soy, cerrar sesión, borrar
   la cuenta, la privacidad entre cuentas, las contraseñas y los tokens, las IPs de la PC y
   el anuncio en la red.
 - `juego\tests\` (704): las reglas de color, el tablero y los mapas, la validación de
   jugadas, los puntos, y la paridad con las reglas de la app (320 tableros).
-- `salas\tests\` (266): el lobby, la preparación, las rondas, las desconexiones, los puntos
-  y los puestos, la meta, la privacidad, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
+- `salas\tests\` (275): el lobby, la preparación, las rondas, las desconexiones, los puntos
+  y los puestos, la meta, la privacidad y lo que se ve del tablero de los demás, la API HTTP, y partidas enteras simuladas de 2 a 6 jugadores
   en los 4 mapas, con jugadores que se rinden a la mitad.
