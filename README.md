@@ -85,7 +85,11 @@ Todo bajo `/auth/`, en JSON:
 | `GET /servidor/` | El nombre del servidor ("Brilliant en ORION"), **sin sesión**: la app lo pide al encontrarlo probando las direcciones de su red, cuando el anuncio mDNS no llega | — |
 
 Las rutas con sesión llevan el header `Authorization: Token <token>`. Los errores vienen en
-español, por campo: `{"password": ["Esta contraseña es demasiado corta..."]}`.
+español, por campo: `{"password": ["Al menos 8 caracteres"]}`. Son los que la app muestra
+tal cual, así que están escritos aquí, cortos y de tú: "Usuario o contraseña incorrectos.",
+"Ese nombre ya está en uso", "Es demasiado común"… (`cuentas/serializers.py` y
+`cuentas/validadores.py`), no los de DRF, Django o djoser. Los de las salas tampoco dicen
+datos de adentro (ni coordenadas como "D4").
 
 Iniciar sesión responde **409** si la cuenta tiene la sesión activa en otro aparato (ver
 abajo).

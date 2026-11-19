@@ -103,16 +103,16 @@ def test_el_409_dice_cuantos_minutos_faltan(cliente, cuenta_con_sesion):
 
     assert respuesta.status_code == 409
     assert respuesta.data['non_field_errors'] == [sesion_en_otro_aparato(2)]
-    assert 'espera 2 minutos' in respuesta.data['non_field_errors'][0]
+    assert 'espera 2 min' in respuesta.data['non_field_errors'][0]
 
 
-def test_un_minuto_se_dice_en_singular(cliente, cuenta_con_sesion):
+def test_con_menos_de_un_minuto_dice_1_min(cliente, cuenta_con_sesion):
     _sin_usar_desde_hace(cuenta_con_sesion, timedelta(minutes=4, seconds=30))
     cliente.credentials()
 
     mensaje = entrar(cliente).data['non_field_errors'][0]
 
-    assert 'espera 1 minuto ' in mensaje
+    assert mensaje.endswith('espera 1 min.')
 
 
 def test_la_sesion_dura_cinco_minutos_sin_uso(cliente, cuenta_con_sesion):

@@ -28,7 +28,10 @@ USUARIO_DE_OTRO_LARGO = (
 USUARIO_CON_CARACTERES_RAROS = (
     'Solo puede tener letras sin acento, números, punto, guion y guion bajo.'
 )
-USUARIO_REPETIDO = 'Ya existe un usuario con este nombre.'
+USUARIO_REPETIDO = 'Ese nombre ya está en uso'
+
+CREDENCIALES_MALAS = 'Usuario o contraseña incorrectos.'
+CONTRASENA_INCORRECTA = 'Contraseña incorrecta.'
 
 
 def _campo_de_contrasena(**opciones):
@@ -39,8 +42,19 @@ def _campo_de_contrasena(**opciones):
         style={'input_type': 'password'},
         trim_whitespace=False,
         max_length=LARGO_MAXIMO_CONTRASENA,
+        error_messages=_MENSAJES_DE_CAMPO | {
+            'max_length': f'Máximo {LARGO_MAXIMO_CONTRASENA} caracteres',
+        },
         **opciones,
     )
+
+
+# Los de DRF ("Asegúrese de que este campo…", "Este campo es requerido.") hablan de usted
+# y de "este campo"; estos, como los de la app.
+_MENSAJES_DE_CAMPO = {
+    'required': 'Falta este dato',
+    'blank': 'Falta este dato',
+}
 
 
 class CrearCuenta(UserCreatePasswordRetypeSerializer):
@@ -70,6 +84,8 @@ class CrearCuenta(UserCreatePasswordRetypeSerializer):
 class BorrarCuenta(UserDeleteSerializer):
     """Borrar la cuenta, con la contraseña actual tal cual se escribió."""
 
+    default_error_messages = {'invalid_password': CONTRASENA_INCORRECTA}
+
     current_password = _campo_de_contrasena()
 
 
@@ -77,5 +93,19 @@ class DatosParaEntrar(AuthTokenSerializer):
     """Usuario y contraseña para iniciar sesión, con la contraseña tal cual y
     un largo máximo para los dos."""
 
-    username = serializers.CharField(write_only=True, max_length=150)
+    username = serializers.CharField(
+        write_only=True,
+        max_length=150,
+        error_messages=_MENSAJES_DE_CAMPO | {'max_length': 'Máximo 150 caracteres'},
+    )
     password = _campo_de_contrasena(write_only=True)
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except serializers.ValidationError as error:
+            # Usuario o contraseña mal: el mismo mensaje exista o no el usuario, para no
+            # revelar qué cuentas existen.
+            if error.get_codes() == ['authorization']:
+                raise serializers.ValidationError(CREDENCIALES_MALAS, code='authorization') from None
+            raise

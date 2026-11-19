@@ -151,7 +151,9 @@ class Salas:
             ahora = self._reloj()
             sala = self._sala(codigo, ahora)
             if usuario in sala.jugadores and sala.jugadores[usuario].estado == ACTIVO:
-                raise ErrorDeSala('ya_estas_en_la_sala', 'Ya estás en esta sala.', 409)
+                raise ErrorDeSala(
+                    'ya_estas_en_la_sala', 'Todavía estás en esa sala. Espera unos segundos.', 409
+                )
             if sala.estado != ESPERANDO:
                 raise ErrorDeSala('ya_empezo', 'La partida ya empezó o terminó.', 409)
             self._exigir_sin_sala(usuario, ahora)
@@ -251,7 +253,7 @@ class Salas:
             if not acepta_como_inicial(tablero, casilla, numero):
                 raise ErrorDeSala(
                     'preparacion_invalida',
-                    f'El {numero} no cabe en {casilla}.',
+                    f'El {numero} no cabe ahí.',
                     motivo='zona',
                 )
 
@@ -686,8 +688,7 @@ class Salas:
         if self._sala_activa_de(usuario, ahora) is not None:
             raise ErrorDeSala(
                 'ya_estas_en_una_sala',
-                'Tu partida anterior sigue abierta. Si cerraste la app, se libera sola en unos '
-                'segundos.',
+                'Todavía estás en otra sala. Espera unos segundos.',
                 409,
             )
 

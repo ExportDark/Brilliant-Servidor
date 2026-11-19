@@ -52,7 +52,7 @@ def test_rechaza_contrasenas_que_no_coinciden(cliente):
 def test_los_errores_vienen_en_espanol(cliente):
     respuesta = crear_cuenta(cliente, contrasena='corta1!')
 
-    assert 'demasiado corta' in ' '.join(respuesta.data['password'])
+    assert respuesta.data['password'] == ['Al menos 8 caracteres']
 
 
 def test_limita_cuantas_cuentas_se_crean_desde_una_misma_ip(cliente):

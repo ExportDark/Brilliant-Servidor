@@ -78,18 +78,16 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
 ]
 
+# Los de Django, con mensajes cortos y de tú (ver cuentas/validadores.py).
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 8},
-    },
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'cuentas.validadores.ParecidaAlUsuario'},
+    {'NAME': 'cuentas.validadores.LargoMinimo', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'cuentas.validadores.Comun'},
+    {'NAME': 'cuentas.validadores.SoloNumeros'},
 ]
 
-# Los mensajes de error (contraseña muy corta, usuario repetido...) salen en
-# español, y la app los muestra tal cual.
+# Los mensajes de error salen en español, y la app los muestra tal cual. Los que la app
+# ve están escritos aquí (cortos y de tú), no los de DRF, Django o djoser.
 LANGUAGE_CODE = 'es'
 USE_I18N = True
 TIME_ZONE = 'UTC'

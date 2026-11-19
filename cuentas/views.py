@@ -19,11 +19,7 @@ from .serializers import DatosParaEntrar
 
 def sesion_en_otro_aparato(minutos: int) -> str:
     """El mensaje del 409: la cuenta tiene una sesión sin vencer en otro aparato."""
-    unidad = 'minuto' if minutos == 1 else 'minutos'
-    return (
-        'Esta cuenta ya tiene la sesión iniciada en otro aparato. Ciérrala allá, o '
-        f'espera {minutos} {unidad} si ya no la usas.'
-    )
+    return f'Tu cuenta está abierta en otro aparato. Ciérrala allá o espera {minutos} min.'
 
 
 def _en_otro_aparato(minutos: int) -> Response:
